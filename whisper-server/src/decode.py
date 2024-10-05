@@ -1,7 +1,7 @@
 import whisper
 import librosa
 import numpy as np
-from utils import __array_to_wav
+from utils import array_to_wav
 
 def decode_audio(audio):
     model = whisper.load_model("base")
@@ -18,4 +18,4 @@ def remove_silence_librosa(audio_path, output_name, top_db=30, frame_length=2048
     non_silent_intervals = librosa.effects.split(audio, top_db=top_db, frame_length=frame_length, hop_length=hop_length)
     # Unir los fragmentos de audio que no son silencio
     non_silent_audio = np.concatenate([audio[start:end] for start, end in non_silent_intervals])
-    __array_to_wav(non_silent_audio, output_name)
+    array_to_wav(non_silent_audio, output_name)
