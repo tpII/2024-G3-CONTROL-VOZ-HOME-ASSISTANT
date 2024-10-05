@@ -12,3 +12,21 @@
 
 **Bloqueantes**
 - No hay bloqueantes en el desarrollo del sistema
+
+
+### Bitácora 5/10
+
+**Feats**
+
+- El servidor es capaz de reconocer la palabra clave en un string
+- Agregamos path para definir el comando en base a las palabras claves encontradas
+
+**Next Steps**
+
+- Definir exactamente la entrada de 8 bits que permite el servidor para compatibilidad con WebmosD1 server
+- Enviar la respuesta a otro server que manejara las luces
+- Hacer pruebas de Dockerizacion de whisper-server de container running y docker-compose
+
+**Bloqueantes**
+
+- No hay bloqueantes
