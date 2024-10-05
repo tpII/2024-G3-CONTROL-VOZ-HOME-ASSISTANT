@@ -12,7 +12,7 @@ def index():
     return "Whisper server"
 
 # Only JSON requirement request & response
-@app.route('/decode', methods=['GET'])
+@app.route('/decode', methods=['POST'])
 def decode():
 
     # Obtener el parámetro opcional, con un valor por defecto
@@ -30,11 +30,12 @@ def decode():
 
 
 # Dado el texto decodificado. Retorna la primer palabra clave y su respecitvo comando a enviar
-@app.route('/actions/<text>', methods=['GET'])
+@app.route('/actions/<text>', methods=['POST'])
 def actions(text):
 
     command_output = set_command(text)
     
+    # TODO: Enviar al server de luces
     return command_output
 
 # Ejecuta el servidor de desarrollo
