@@ -1,0 +1,21 @@
+AllCops:
+  Exclude:
+  # Rubocop defaults
+  - vendor/**/*
+  - spec/fixtures/**/*
+  - tmp/**/*
+  # Framework generated configuration files
+  - Gemfile
+  - config/boot.rb
+  - config/application.rb
+  - config/environment.rb
+  - config/environments/development.rb
+  - config/environments/production.rb
+  - config/environments/test.rb
+  - config/initializers/devise.rb
+  - bin/**/*
+  - script/**/*
+  - db/schema.rb
+  # Other generated files (project independent)
+  - spec/spec_helper.rb
+  - spec/rails_helper.rb
