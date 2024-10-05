@@ -1,28 +1,41 @@
-from flask import Flask
+from flask import Flask, redirect, url_for, request
 from decode import decode_audio, remove_silence_librosa
-import time
+from utils import array_to_wav
+from actions import set_command
+
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
 def index():
-    return "Servidor de Whisper."
+    return "Whisper server"
 
-@app.route('/decode')
+# Only JSON requirement request & response
+@app.route('/decode', methods=['GET'])
 def decode():
-    start_time = time.time()
 
-    remove_silence_librosa('./audio/dross_audio.wav', 'output.wav')
-    output = decode_audio('output.wav')
+    # Obtener el parámetro opcional, con un valor por defecto
+    array = request.get_json().get('array', [])
 
-    end_time = time.time()
+    file = 'input.wav' if array else './audio/dross_audio.wav'
 
-    execution_time = round(end_time - start_time, 4)
+    if array:
+        array_to_wav(array, file)
+        
+    remove_silence_librosa(file, 'output.wav')
+    output = decode_audio('input.wav')
+    print(output)
+    return redirect(url_for('actions', text=output))
 
-    print(f"El tiempo de ejecución fue: {execution_time} segundos")
+
+# Dado el texto decodificado. Retorna la primer palabra clave y su respecitvo comando a enviar
+@app.route('/actions/<text>', methods=['GET'])
+def actions(text):
+
+    command_output = set_command(text)
     
-    return output
+    return command_output
 
 # Ejecuta el servidor de desarrollo
 if __name__ == '__main__':
