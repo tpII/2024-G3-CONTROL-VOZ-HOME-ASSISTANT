@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 
@@ -9,12 +9,15 @@ export const metadata: Metadata = {
   title: "Taller 2 Dashboard",
   description:
     "Dashboard para el control del sistema implementado en Taller de Proyecto 2",
-  themeColor: "#f472b6",
   icons: {
     icon: "/icons/192x192.png",
     apple: "/icons/192x192.png",
   },
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f472b6",
 };
 
 export default function RootLayout({
