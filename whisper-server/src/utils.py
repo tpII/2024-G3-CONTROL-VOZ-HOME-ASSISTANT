@@ -10,12 +10,11 @@ def check_audio_metadata(audio_input):
     print("Endian: " + str(f.endian))
 
 
-def __array_to_wav(array, file, sample_rate=44100, duration=2, frequency=440):
+def array_to_wav(array, file, sample_rate=44100):
     # Verificar que el array esté en el rango de -1 a 1
     if np.max(np.abs(array)) > 1.0:
         print("Los datos del array están fuera del rango [-1, 1]. Se escalarán automáticamente.")
         array = array / np.max(np.abs(array))
-    audio_data = np.int16(array * 32767)
+    audio_data = np.uint8((array + 1) * 127.5)  # Escalamos de [-1, 1] a [0, 255]. 8 bits de datos de entrada mulitplicado por factor de escala para acomodar a wav
     # Guardar el array como un archivo WAV
     write(file, sample_rate, audio_data)
-
