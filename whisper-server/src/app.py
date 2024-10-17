@@ -23,10 +23,12 @@ def decode():
     if array:
         array_to_wav(array, file)
         
-    remove_silence_librosa(file, 'output.wav')
-    output = decode_audio('input.wav')
-    print(output)
-    return redirect(url_for('actions', text=output))
+    #remove_silence_librosa(file, 'output.wav')
+    #output = decode_audio('input.wav')
+    #print(output)
+    print(array)
+    #return redirect(url_for('actions', text=output))
+    return 0
 
 
 # Dado el texto decodificado. Retorna la primer palabra clave y su respecitvo comando a enviar
