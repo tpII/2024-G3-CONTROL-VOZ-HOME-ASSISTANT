@@ -1,17 +1,3 @@
-## Getting Started with taller-2
+## Dashboard PWA
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El detalle del proyecto se encuentra en [la Wiki.](https://github.com/tpII/2024-G3-CONTROL-VOZ-HOME-ASSISTANT/wiki/Dashboard-PWA)
