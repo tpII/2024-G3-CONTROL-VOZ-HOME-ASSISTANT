@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
-import "./globals.css";
+import "../globals.css";
 
 import { InstallButton } from "@/components/app/install-button";
 import { InstallPromptProvider } from "@/contexts/install-prompt";
