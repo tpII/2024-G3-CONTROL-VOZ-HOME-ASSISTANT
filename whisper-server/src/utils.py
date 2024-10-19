@@ -11,6 +11,9 @@ def check_audio_metadata(audio_input):
 
 
 def array_to_wav(array, file, sample_rate=44100):
+    # Asegurarse de que el array es un ndarray y 1D
+    array = np.asarray(array)
+
     # Verificar que el array esté en el rango de -1 a 1
     if np.max(np.abs(array)) > 1.0:
         print("Los datos del array están fuera del rango [-1, 1]. Se escalarán automáticamente.")

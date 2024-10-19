@@ -1,8 +1,7 @@
-from flask import Flask, redirect, url_for, request
+from flask import Flask, redirect, url_for, request, jsonify
 from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
-
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
@@ -17,15 +16,14 @@ def decode():
 
     # Obtener el parámetro opcional, con un valor por defecto
     array = request.get_json().get('array', [])
-
     file = 'input.wav' if array else './audio/dross_audio.wav'
 
     if array:
-        array_to_wav(array, file)
+        array_to_wav(array , file)
         
-    remove_silence_librosa(file, 'output.wav')
-    output = decode_audio('input.wav')
-    print(output)
+        
+    #remove_silence_librosa(file, 'output.wav')
+    output = decode_audio(file)
     return redirect(url_for('actions', text=output))
 
 
