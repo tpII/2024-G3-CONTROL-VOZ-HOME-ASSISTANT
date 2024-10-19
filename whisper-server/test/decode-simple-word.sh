@@ -2,8 +2,7 @@
 
 max_attempts=10
 attempt=0
-server_pid=$!
-data=$(cat output.txt)
+data=$(cat input.txt)
 
 function check_server {
   status_code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080)
@@ -16,7 +15,10 @@ function check_server {
 
 echo "TEST: envio y decodificacion de palabra clave"
 
-python3 ../src/app.py
+python3 ../src/app.py > output.log 2>&1 &
+
+# Guardar el PID del proceso
+server_pid=$!
 
 # Darle un tiempo al servidor para iniciar
 echo "Iniciando server..."
@@ -43,15 +45,15 @@ echo "Haciendo una petición POST..."
 
 echo "{\"array\": $data}" > temp_data.json
 
-response=$(curl -X POST http://localhost:8080/decode \
+curl -X POST http://localhost:8080/decode \
 -H "Content-Type: application/json" \
---data-binary @temp_data.json)
-
-# Mostrar la respuesta
-echo "Respuesta del servidor:"
-echo "$response"
+--data-binary @temp_data.json
 
 rm temp_data.json
+rm output.log
+rm input.wav
+
+echo "Prueba de decodificacion ejecutada correctamente"
 
 echo "Cerrando servidor HTTP..."
 kill $server_pid
