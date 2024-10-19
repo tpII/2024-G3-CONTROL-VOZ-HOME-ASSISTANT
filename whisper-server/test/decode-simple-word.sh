@@ -3,6 +3,7 @@
 max_attempts=10
 attempt=0
 server_pid=$!
+data=$(cat output.txt)
 
 function check_server {
   status_code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080)
@@ -13,13 +14,12 @@ function check_server {
   fi
 }
 
-# 1. Crear y levantar un servidor HTTP básico en Bash usando netcat (nc)
 echo "TEST: envio y decodificacion de palabra clave"
 
 python3 ../src/app.py
 
 # Darle un tiempo al servidor para iniciar
-echp "Iniciando server..."
+echo "Iniciando server..."
 
 
 while ! check_server; do
@@ -39,14 +39,19 @@ sleep 1
 
 echo "Haciendo una petición POST..."
 
-curl -X POST http://localhost:8080 \
--H "Content-Type: application/json" \
--d '{
-  "nombre": "Juan",
-  "edad": 30,
-  "profesion": "Desarrollador"
-}'
 
-# 4. Terminar el servidor HTTP
+
+echo "{\"array\": $data}" > temp_data.json
+
+response=$(curl -X POST http://localhost:8080/decode \
+-H "Content-Type: application/json" \
+--data-binary @temp_data.json)
+
+# Mostrar la respuesta
+echo "Respuesta del servidor:"
+echo "$response"
+
+rm temp_data.json
+
 echo "Cerrando servidor HTTP..."
 kill $server_pid
