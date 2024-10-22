@@ -13,17 +13,14 @@ function check_server {
   fi
 }
 
-# Inicia la medición de tiempo total
 start_total=$(date +%s)
 
 echo "TEST: envio y decodificacion de palabra clave"
 
 python3 ../src/app.py > output.log 2>&1 &
 
-# Guardar el PID del proceso
 server_pid=$!
 
-# Darle un tiempo al servidor para iniciar
 echo "Iniciando server..."
 
 start_server=$(date +%s)
@@ -47,7 +44,6 @@ sleep 1
 
 echo "Haciendo una petición GET..."
 
-# Medir tiempo de la petición POST
 start_post=$(date +%s)
 
 echo "{\"array\": $data}" > temp_data.json
@@ -60,7 +56,6 @@ end_post=$(date +%s)
 echo ""
 echo "Tiempo para ejecutar la petición GET: $((end_post - start_post)) segundos."
 
-# Limpiar archivos temporales
 rm temp_data.json
 rm output.log
 #rm input.wav
@@ -70,6 +65,5 @@ echo "Prueba de decodificación ejecutada correctamente."
 echo "Cerrando servidor HTTP..."
 kill $server_pid
 
-# Medición de tiempo total
 end_total=$(date +%s)
 echo "Tiempo total de ejecución: $((end_total - start_total)) segundos."
