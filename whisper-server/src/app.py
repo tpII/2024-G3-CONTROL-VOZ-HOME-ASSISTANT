@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, request, jsonify
 from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
+from websocket import send_data
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
@@ -26,6 +27,8 @@ def decode():
     output = decode_audio('output.wav')
     command_output = set_command(str(output))
 
+    #send_data(command_output)
+    
     return command_output
 
 # Ejecuta el servidor de desarrollo
