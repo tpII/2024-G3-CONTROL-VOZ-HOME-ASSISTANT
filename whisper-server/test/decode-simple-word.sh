@@ -13,16 +13,17 @@ function check_server {
   fi
 }
 
+start_total=$(date +%s)
+
 echo "TEST: envio y decodificacion de palabra clave"
 
 python3 ../src/app.py > output.log 2>&1 &
 
-# Guardar el PID del proceso
 server_pid=$!
 
-# Darle un tiempo al servidor para iniciar
 echo "Iniciando server..."
 
+start_server=$(date +%s)
 
 while ! check_server; do
   if [ "$attempt" -ge "$max_attempts" ]; then
@@ -35,25 +36,34 @@ while ! check_server; do
   sleep 1
 done
 
+end_server=$(date +%s)
 echo "El servidor está listo."
+echo "Tiempo para iniciar el servidor: $((end_server - start_server)) segundos."
 
 sleep 1
 
-echo "Haciendo una petición POST..."
+echo "Haciendo una petición GET..."
 
-
+start_post=$(date +%s)
 
 echo "{\"array\": $data}" > temp_data.json
 
-curl -X POST http://localhost:8080/decode \
+curl -X GET http://localhost:8080/decode \
 -H "Content-Type: application/json" \
 --data-binary @temp_data.json
 
+end_post=$(date +%s)
+echo ""
+echo "Tiempo para ejecutar la petición GET: $((end_post - start_post)) segundos."
+
 rm temp_data.json
 rm output.log
-rm input.wav
+#rm input.wav
 
-echo "Prueba de decodificacion ejecutada correctamente"
+echo "Prueba de decodificación ejecutada correctamente."
 
 echo "Cerrando servidor HTTP..."
 kill $server_pid
+
+end_total=$(date +%s)
+echo "Tiempo total de ejecución: $((end_total - start_total)) segundos."

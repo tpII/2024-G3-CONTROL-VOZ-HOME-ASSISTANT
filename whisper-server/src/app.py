@@ -11,7 +11,7 @@ def index():
     return "Whisper server"
 
 # Only JSON requirement request & response
-@app.route('/decode', methods=['POST'])
+@app.route('/decode', methods=['GET'])
 def decode():
 
     # Obtener el parámetro opcional, con un valor por defecto
@@ -22,18 +22,10 @@ def decode():
         array_to_wav(array , file)
         
         
-    #remove_silence_librosa(file, 'output.wav')
-    output = decode_audio(file)
-    return redirect(url_for('actions', text=output))
+    remove_silence_librosa(file, 'output.wav')
+    output = decode_audio('output.wav')
+    command_output = set_command(str(output))
 
-
-# Dado el texto decodificado. Retorna la primer palabra clave y su respecitvo comando a enviar
-@app.route('/actions/<text>', methods=['POST'])
-def actions(text):
-
-    command_output = set_command(text)
-    
-    # TODO: Enviar al server de luces
     return command_output
 
 # Ejecuta el servidor de desarrollo
