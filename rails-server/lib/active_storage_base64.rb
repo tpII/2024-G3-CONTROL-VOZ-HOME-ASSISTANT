@@ -2,7 +2,7 @@ module ActiveStorageBase64
   extend ActiveSupport::Concern
 
   class_methods do
-    def has_base64_attached(name)
+    def base64_attached?(name)
       attribute "#{name}_base64", :string
 
       before_save do
@@ -15,4 +15,4 @@ module ActiveStorageBase64
   end
 end
 
-ActiveRecord::Base.send :include, ActiveStorageBase64
+ActiveSupport.on_load(:active_record) { include ActiveStorageBase64 }

@@ -3,15 +3,18 @@
 module Api
   module V1
     class SessionsController < DeviseTokenAuth::SessionsController
+      respond_to :json
       def create
+        byebug
         super do |resource|
           # Personaliza la respuesta después de un login exitoso
+          token = resource.create_token
+          expiry_date = Time.at(token.expiry).in_time_zone('Buenos Aires').strftime('%Y-%m-%d %H:%M:%S')
           @response_data = {
             status: 'success',
-            data: {
-              id: resource.id,
-              email: resource.email,
-              name: resource.name
+            data:   {
+              access_token: token.token,
+              token:        expiry_date
             }
           }
         end
@@ -23,7 +26,7 @@ module Api
         @resource.save
 
         render json: {
-          status: 'success',
+          status:  'success',
           message: 'Logged out successfully'
         }
       end

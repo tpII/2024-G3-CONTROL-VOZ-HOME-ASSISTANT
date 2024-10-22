@@ -6,7 +6,7 @@ DeviseTokenAuth.setup do |config|
   config.default_confirm_success_url = '/'
 
   # Increases token lifespan
-  config.token_lifespan = 2.weeks
+  config.token_lifespan = 30.minutes
 
   # Changes to a request will not generate a new token
   config.change_headers_on_each_request = false
