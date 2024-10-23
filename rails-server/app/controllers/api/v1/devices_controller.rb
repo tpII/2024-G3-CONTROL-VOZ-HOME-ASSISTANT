@@ -2,7 +2,7 @@ module Api
   module V1
     class DevicesController < ApplicationController
       before_action :authenticate_user!
-      before_action :set_device, only: %i[show update destroy]
+      before_action :set_device, only: [:show, :update, :destroy]
 
       def index
         @devices = current_user.devices
