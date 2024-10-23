@@ -2,7 +2,7 @@ module Api
   module V1
     class AudiosController < ApplicationController
       before_action :authenticate_user!
-      before_action :set_audio, only: %i[show destroy transcribe]
+      before_action :set_audio, only: [:show, :destroy, :transcribe]
 
       def index
         @audios = current_user.audios

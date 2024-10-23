@@ -14,14 +14,14 @@ module Api
           # Crea un token de acceso para el usuario
           token = @resource.create_token
           @resource.save
-          expiry_date = Time.at(token.expiry).in_time_zone('Buenos Aires').strftime('%Y-%m-%d %H:%M:%S')
+          nice_date = Time.at(token.expiry).in_time_zone('Buenos Aires').strftime('%Y-%m-%d %H:%M:%S')
 
           render json: {
             status: 'success',
             data:   {
               status:       :ok,
-              access_token: token.token,
-              expiry:       expiry_date
+              access_token: token,
+              expiry:       nice_date
             }
           }, status: :created
         else
