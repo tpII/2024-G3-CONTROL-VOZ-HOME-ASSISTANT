@@ -18,6 +18,6 @@ def array_to_wav(array, file, sample_rate=44100):
     if np.max(np.abs(array)) > 1.0:
         print("Los datos del array están fuera del rango [-1, 1]. Se escalarán automáticamente.")
         array = array / np.max(np.abs(array))
-    audio_data = np.uint8((array + 1) * 127.5)  # Escalamos de [-1, 1] a [0, 255]. 8 bits de datos de entrada mulitplicado por factor de escala para acomodar a wav
+    audio_data = (array + 1) * 127.5  # Escalamos de [-1, 1] a [0, 255]. 8 bits de datos de entrada mulitplicado por factor de escala para acomodar a wav
     # Guardar el array como un archivo WAV
     write(file, sample_rate, audio_data)
