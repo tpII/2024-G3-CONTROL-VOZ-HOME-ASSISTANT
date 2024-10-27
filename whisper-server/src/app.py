@@ -2,7 +2,6 @@ from flask import Flask, redirect, url_for, request, jsonify
 from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
-
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
 # Define una ruta y una función de vista para la URL raíz
@@ -30,4 +29,4 @@ def decode():
 
 # Ejecuta el servidor de desarrollo
 if __name__ == '__main__':
-    app.run(port=8080) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios
+    app.run(host="0.0.0.0", port=8080) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios
