@@ -3,10 +3,12 @@ import librosa
 import numpy as np
 from utils import array_to_wav
 
+
+model = whisper.load_model("base")
+
 def decode_audio(audio):
-    model = whisper.load_model("base")
     audio = whisper.load_audio(audio)
-    result = model.transcribe(audio, language="es")["text"]
+    result = model.transcribe(audio, language="es")["text"] # Este es el bottleneck de whisper-server
     print(f"El resultado es: {result}")
     return str(result), 200
 
