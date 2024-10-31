@@ -30,3 +30,27 @@
 **Bloqueantes**
 
 - No hay bloqueantes
+
+
+### Bitácora 31/10
+
+**Completo**:
+- El sistema en base a la conversion hecha en texto ya reconoce la palabra clave y retorna el comando en especifico como output de la request
+- El sistema brinda soporte para audios .wav definidos asi como audios muestreados en 8bits unsigned (requerimiento tecnico para realizar vinculo con wemosD1 server)
+- Se definio el server en forma de API Rest donde se cuenta con un method GET en el path /decode. Recibe como input el arreglo de datos del audio muestreado y retornar el comando a ejecutar
+- Se eliminaron el time tracking desde el codigo
+- Se agregaron tests que garantizan el funcionamiento de whisper. El script levanta el server, envia como GET request el array de un audio muestreado y retorna status 200 si el response es no nulo (el audio viene con una palabra clave)
+    - El test de forma local es capaz de procesar, reconocer la palabra clave y retornar el comando en alrededor de 2 - 3 segundos
+- Se encuentra definido el servicio en forma de servidor 
+- Optimizacion del dockerFile para ejecutarlo de forma tal que sea optimo en terminos de memoria y CPU (2 cores y 600MiB)
+
+**Next Steps**
+
+- Mejorar el tiempo de respuesta desde el contenedor de whisper (actualemente la respuesta tarda 30seg)
+- Implementar ws connection protocol
+- Analizar y/o utilizar un mejor modelo que el base o entrenarlo usando audio examples de comandos
+- Analizar alternativa de AWS Transcribe
+- Migrar el sistema de path a un uso de API al ser un microservicios
+
+**Bloqueantes**
+- No hay bloqueantes en el desarrollo del sistema
