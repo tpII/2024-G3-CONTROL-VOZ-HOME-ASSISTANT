@@ -115,6 +115,7 @@ GEM
     diff-lcs (1.5.1)
     drb (2.2.1)
     erubi (1.13.0)
+    event_emitter (0.2.6)
     factory_bot (6.5.0)
       activesupport (>= 5.0.0)
     factory_bot_rails (6.4.3)
@@ -151,6 +152,7 @@ GEM
     ffi (1.17.0-x86-linux-gnu)
     ffi (1.17.0-x86_64-darwin)
     ffi (1.17.0-x86_64-linux-gnu)
+    foreman (0.88.1)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.6)
@@ -353,6 +355,10 @@ GEM
     warden (1.2.9)
       rack (>= 2.0.9)
     webrick (1.8.2)
+    websocket (1.2.11)
+    websocket-client-simple (0.8.0)
+      event_emitter
+      websocket
     websocket-driver (0.7.6)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
@@ -378,6 +384,7 @@ DEPENDENCIES
   factory_bot_rails
   faker
   faraday
+  foreman
   json_matchers
   listen
   pry-byebug
@@ -395,6 +402,7 @@ DEPENDENCIES
   spring-watcher-listen
   sqlite3 (~> 1.4)
   tzinfo-data
+  websocket-client-simple
 
 RUBY VERSION
    ruby 3.3.0p0

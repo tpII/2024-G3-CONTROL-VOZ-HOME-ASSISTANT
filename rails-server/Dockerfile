@@ -51,9 +51,14 @@ RUN useradd rails --create-home --shell /bin/bash && \
     chown -R rails:rails db log storage tmp
 USER rails:rails
 
-EXPOSE 3000
+ARG RAILS_PORT
+ARG WEBSOCKET_PORT
+EXPOSE $RAILS_PORT
+EXPOSE $WEBSOCKET_PORT
+
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
-CMD ["./bin/rails", "server", "-b", "0.0.0.0"]
+# CMD ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "8080"]
+CMD ["bundle", "exec", "foreman", "start"]

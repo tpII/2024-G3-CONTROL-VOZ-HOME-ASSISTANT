@@ -19,6 +19,9 @@ gem 'pundit'
 gem 'devise'
 gem 'devise_token_auth'
 gem 'faraday'
+gem 'foreman'
+gem 'websocket-client-simple'
+
 
 gem 'redis', '~> 5.0'
 
