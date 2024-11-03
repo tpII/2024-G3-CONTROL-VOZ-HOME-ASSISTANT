@@ -6,8 +6,8 @@ require 'websocket-client-simple'
 
 # Configuraciones del servidor
 API_URL = 'http://localhost:8080'.freeze
-REGISTER_ENDPOINT = '/api/v1/auth'.freeze
-LOGIN_ENDPOINT = '/api/v1/auth/sign_in'.freeze
+REGISTER_ENDPOINT = '/auth'.freeze
+LOGIN_ENDPOINT = '/auth/sign_in'.freeze
 WEBSOCKET_ENDPOINT = '/cable'.freeze
 UDP_UID = 'udp@server.com'.freeze
 UDP_PASSWORD = 123_456_789
@@ -17,7 +17,7 @@ def register_user
   uri = URI.parse("#{API_URL}#{REGISTER_ENDPOINT}")
   http = Net::HTTP.new(uri.host, uri.port)
   request = Net::HTTP::Post.new(uri.path, { 'Content-Type' => 'application/json' })
-  request.body = { email: UDP_UID, password: UDP_PASSWORD, password_confirmation: UDP_PASSWORD }.to_json
+  request.body = { user: { email: UDP_UID, password: UDP_PASSWORD, password_confirmation: UDP_PASSWORD } }.to_json
 
   response = http.request(request)
   JSON.parse(response.body)
@@ -41,15 +41,14 @@ def login_user
   }
 end
 
-
 # Conecta al WebSocket con autenticación
-def connect_websocket
-  # Inicia el registro y login para obtener el token
-  puts 'Registrando y autenticando al usuario...'
-  register_user # Registra el usuario
-  auth_tokens = login_user # Realiza login y obtiene las claves
-  websocket_url = "ws://localhost:8080/cable?access-token=#{auth_tokens[:access_token]}&client=#{auth_tokens[:client]}&uid=#{auth_tokens[:uid]}"
-  ws = WebSocket::Client::Simple.connect websocket_url
+def connect_websocket(auth_tokens)
+  websocket_url = 'ws://localhost:8080/cable'
+  access_token = auth_tokens[:access_token]
+  client = auth_tokens[:client]
+  uid = auth_tokens[:uid]
+  websocket_params = "access-token=#{access_token}&client=#{client}&uid=#{uid}"
+  ws = WebSocket::Client::Simple.connect "#{websocket_url}?#{websocket_params}"
 
   ws.on :message do |msg|
     puts "Mensaje recibido en WebSocket: #{msg.data}"
@@ -69,6 +68,11 @@ def connect_websocket
 
   ws
 end
+
+# Inicia el registro y login para obtener el token
+puts 'Registrando y autenticando al usuario...'
+register_user # Registra el usuario
+auth_tokens = login_user # Realiza login y obtiene las claves
 
 # Conexión al WebSocket
 ws = connect_websocket(auth_tokens)
