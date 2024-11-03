@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => '/cable'
+
   # Rutas para Devise Token Auth
   mount_devise_token_auth_for 'User', at: 'auth', controllers: {
     registrations: 'api/v1/registrations',

@@ -21,6 +21,7 @@ module Api
             data:   {
               status:       :ok,
               access_token: token,
+              uid:          @resource.uid,
               expiry:       nice_date
             }
           }, status: :created
