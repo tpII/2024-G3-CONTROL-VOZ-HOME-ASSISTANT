@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { setCookie } from "cookies-next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -63,11 +62,6 @@ export default function Login() {
         const {
           access_token: { client, token },
         } = data;
-        console.log({
-          token,
-          client,
-          email,
-        });
         Cookies.set("token", token);
         Cookies.set("client", client);
         Cookies.set("uid", email);
