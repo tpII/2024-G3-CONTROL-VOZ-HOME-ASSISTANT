@@ -27,14 +27,14 @@ wifi_pass = "123123123";
    Puedes descargarlo desde [nodejs.org](https://nodejs.org/en).
 
 4. **Iniciar el servidor**:
-   Ejecuta el siguiente comando en el directorio donde se encuentra `server.js`:
+   Ejecuta el siguiente comando en el directorio donde se encuentra `/server_test/server.js`:
    ```bash
    node server.js
    ```
 
 ## Prueba del Servidor
 
-1. Abre la página web `server_js/websocket-client-interface.html`. Esta interfaz te permitirá conectar, desconectar y cargar datos demo que serán enviados por el Wemos D1.
+1. Abre la página web `/server_test/WebSocket_Client/websocket-client-interface.html`. Esta interfaz te permitirá conectar, desconectar y cargar datos demo que serán enviados por el Wemos D1.
 
 2. Para utilizar este test, realiza lo siguiente:
    - Ingresa la IP del servidor al que deseas conectarte.
@@ -44,10 +44,27 @@ wifi_pass = "123123123";
 
 3. Verifica el **panel de estado** para confirmar si la conexión se realizó exitosamente y si el string de confirmación ("Data received") llegó correctamente.
 
+## Prueba del ADC
+*podra ver los valores del ADC en monitor serial, y con el scrypt puede grabar ese stream de datos en un archivo 'audio_grabado.wav' lismo para reproducir*
+
+1. Cargue el programa `adc_example_fast.ino` al WemosD1
+2. Inicie la terminal serie para ver los valores de lectura
+   - velocidad por defecto *`921600` baudios*
+   - el puerto depende del S.O utilizado
+3. Inicie el scrypt de pyton `/server_test/captura_audio.py`
+   ```bash
+   python captura_audio.py
+   ```
+   - previamente debe tener instalado  phyton y la libreria para comunicacion serial
+      ```bash
+      pip install pyserial
+      ```
+
 ## Enlaces Importantes
 
 - [GitHub - WebSocket ESP8266](https://github.com/hellerchr/esp8266-websocketclient/tree/master)
 - [GitHub - Ejemplo de WebSocket](https://github.com/wahengchang/nodejs-websocket-example)
+- [Arduino foro - Fast Read ADC ](https://arduino.stackexchange.com/questions/48640/esp8266-system-adc-read-fast-always-gives-1024-as-output)
 
 ---
 
@@ -65,3 +82,6 @@ wifi_pass = "123123123";
 
 **Sin probar**:
 - Enviar paquete de datos desde Wemos D1.
+
+
+
