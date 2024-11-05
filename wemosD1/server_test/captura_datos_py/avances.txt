@@ -1,0 +1,2 @@
+el archivo Mic_ contiene la grabacion de audio obtenida desde el sensor hablandole "Alexa"
+el archivo Audio_Capture la grabacion de un generador de frecuencia de 20KHZ
