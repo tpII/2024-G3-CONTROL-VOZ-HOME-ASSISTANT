@@ -6,7 +6,7 @@ const char* ssid = "Free";
 const char* password = "123123123";
 
 // Configuración de UDP
-const char* udpAddress = "192.168.1.49"; // Dirección IP de la computadora
+const char* udpAddress = "192.168.113.180"; // Dirección IP de la computadora
 const int udpPort = 12345; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
@@ -34,9 +34,9 @@ void setup() {
 
 }
 
-uint16_t calculateChecksum(uint16_t* data, size_t length) {
+uint16_t calculateChecksum(uint16_t* data, uint16_t length) {
   uint16_t checksum = 0;
-  for (size_t i = 0; i < length; i++) {
+  for (uint16_t i = 0; i < length; i++) {
     checksum += data[i]; // Suma simple para checksum
   }
   return checksum;
@@ -44,13 +44,12 @@ uint16_t calculateChecksum(uint16_t* data, size_t length) {
 
 void loop() {
 
-  uint8_t * ptr_data= (uint8_t*) adc_addr;; // puntero a datos
-  adc_addr[num_samples]=calculateChecksum(adc_addr, num_samples);
-
+  uint16_t checksum=calculateChecksum(adc_addr, num_samples);
 
   // Enviar datos por UDP
   udp.beginPacket(udpAddress, udpPort);
-  udp.write(ptr_data, 2*num_samples+2);
+  udp.write((uint8_t*) adc_addr, 2*(num_samples) );
+  udp.write((uint8_t*) &checksum, 2); 
   udp.endPacket();
 
   Serial.println("Datos enviados con checksum.");

@@ -19,7 +19,7 @@ discarded_packets = 0
 
 # Función para calcular el checksum de los datos recibidos
 def calculate_checksum(data):
-    checksum = sum(data[:-1]) & 0xFFFF  # Calcular el checksum excluyendo el último valor (el checksum recibido)
+    checksum = sum(data[:]) & 0xFFFF  # Calcular el checksum excluyendo el último valor (el checksum recibido)
     return checksum
 
 # Función para imprimir la interfaz de inicio
