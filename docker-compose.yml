@@ -6,22 +6,21 @@ services:
     build: ./dashboard-pwa
     container_name: frontend-dashboard 
     ports:
-      - "5432:5432" # Puerto mapeado
+      - "3000:3000" # Puerto mapeado
 
   # Servicio de la aplicación web (ej. una app en Node.js)
   webserver:
-    image: node:18 # Imagen de Node.js
-    build: ./webserver
-    container_name: node-app
+    build: ./rails-server # Imagen de Node.js
+    container_name: ruby-server
     environment:
-      NODE_ENV: development
-    working_dir: /app # Directorio de trabajo dentro del contenedor
+      SECRET_KEY_BASE: akjnajsdfkanskfskj
+      RAILS_ENV: development
     ports:
-      - "3000:3000" # Puerto de la aplicación web
+      - "12345:12345"
+      - "8080:8080"
 
   whisper:
-    image: node:18 # Imagen de Node.js
     build: ./whisper-server
     container_name: whisper-service
     ports:
-      - "8080:8080" 
+      - "8081:8081" 

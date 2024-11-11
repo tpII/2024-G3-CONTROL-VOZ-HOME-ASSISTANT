@@ -51,10 +51,8 @@ RUN useradd rails --create-home --shell /bin/bash && \
     chown -R rails:rails db log storage tmp
 USER rails:rails
 
-ARG RAILS_PORT
-ARG WEBSOCKET_PORT
-EXPOSE $RAILS_PORT
-EXPOSE $WEBSOCKET_PORT
+EXPOSE 8080
+EXPOSE 12345
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
