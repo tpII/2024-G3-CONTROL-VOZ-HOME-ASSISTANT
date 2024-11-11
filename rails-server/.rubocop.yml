@@ -1,0 +1,85 @@
+require:
+  - rubocop-rails
+
+# https://github.com/rubocop-hq/rubocop/blob/master/config/default.yml
+AllCops:
+  TargetRubyVersion: 3.3.0
+  NewCops: enable
+  Include:
+    - Rakefile
+    - config.ru
+    - lib/**/*.rake
+  Exclude:
+    - db/schema.rb
+
+Bundler/OrderedGems:
+  Enabled: false
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/BlockLength:
+  Exclude:
+  - config/routes.rb
+  - spec/**/*.rb
+  - config/routes/*.rb
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Max: 20
+
+Metrics/ModuleLength:
+  Max: 150
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never
+
+Style/Documentation:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: false
+
+Style/HashTransformValues:
+  Enabled: false
+
+Style/HashSyntax:
+  Enabled: false
+
+Style/SymbolArray:
+  EnforcedStyle: "brackets"
+
+Style/WordArray:
+  EnforcedStyle: "brackets"
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: "consistent"
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: "indented"
+
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: "table"
+  EnforcedColonStyle: "table"
+
+Style/AsciiComments:
+  Enabled: false
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+inherit_from: .rubocop-excludes.yml

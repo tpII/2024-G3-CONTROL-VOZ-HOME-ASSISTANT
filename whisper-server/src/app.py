@@ -1,29 +1,32 @@
-from flask import Flask
+from flask import Flask, redirect, url_for, request, jsonify
 from decode import decode_audio, remove_silence_librosa
-import time
-
+from utils import array_to_wav
+from actions import set_command
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
 def index():
-    return "Servidor de Whisper."
+    return "Whisper server"
 
-@app.route('/decode')
+# Only JSON requirement request & response
+@app.route('/decode', methods=['GET'])
 def decode():
-    start_time = time.time()
 
-    remove_silence_librosa('./audio/dross_audio.wav', 'output.wav')
+    # Obtener el parámetro opcional, con un valor por defecto
+    array = request.get_json().get('array', [])
+    file = 'input.wav' if array else './audio/dross_audio.wav'
+
+    if array:
+        array_to_wav(array , file)
+        
+        
+    remove_silence_librosa(file, 'output.wav')
     output = decode_audio('output.wav')
+    command_output = set_command(str(output))
 
-    end_time = time.time()
-
-    execution_time = round(end_time - start_time, 4)
-
-    print(f"El tiempo de ejecución fue: {execution_time} segundos")
-    
-    return output
+    return command_output
 
 # Ejecuta el servidor de desarrollo
 if __name__ == '__main__':
-    app.run(port=8080) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios
+    app.run(host="0.0.0.0", port=8080) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios

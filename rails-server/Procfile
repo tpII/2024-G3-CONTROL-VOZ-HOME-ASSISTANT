@@ -1,0 +1,2 @@
+web: bundle exec rails server -p 8080 -b 0.0.0.0
+udp_server: ./wait-for-it.sh 0.0.0.0 8080 -- ruby udp_server.rb

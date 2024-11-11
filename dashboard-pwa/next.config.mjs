@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
-import nextPWA from "next-pwa";
+import withSerwistInit from "@serwist/next";
 
 const nextConfig = {
-  experimental: {
-    reactCompiler: true,
-    instrumentationHook: true,
-  },
   logging: {
     fetches: {
       fullUrl: true,
@@ -13,10 +9,10 @@ const nextConfig = {
   },
 };
 
-const withPWA = nextPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
+const withPWA = withSerwistInit({
+  reloadOnOnline: true,
+  swSrc: "src/sw.ts",
+  swDest: "public/sw.js",
 });
 
 export default withPWA(nextConfig);
