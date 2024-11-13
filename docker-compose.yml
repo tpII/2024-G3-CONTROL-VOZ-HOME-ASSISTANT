@@ -1,26 +1,30 @@
 version: '3.8'  # Define la versión de Docker Compose
 
 services:
-  # Servicio de la base de datos PostgreSQL
+  # Servicio de la dashboard
   frontend-dashboard:
     build: ./dashboard-pwa
-    container_name: frontend-dashboard 
+    container_name: frontend-dashboard
     ports:
       - "3000:3000" # Puerto mapeado
 
-  # Servicio de la aplicación web (ej. una app en Node.js)
+  # Servicio de la aplicación web (ej. una app en Ruby)
   webserver:
-    build: ./rails-server # Imagen de Node.js
+    build: ./rails-server # Imagen de ruby
     container_name: ruby-server
-    environment:
-      SECRET_KEY_BASE: akjnajsdfkanskfskj
-      RAILS_ENV: development
+    env_file:
+      - ./rails-server/.env
+    volumes:
+      - ./rails-server:/app
     ports:
       - "12345:12345"
       - "8080:8080"
+    network_mode: host
+    stdin_open: true
+    tty: true
 
   whisper:
     build: ./whisper-server
     container_name: whisper-service
     ports:
-      - "8081:8081" 
+      - "8081:8081"
