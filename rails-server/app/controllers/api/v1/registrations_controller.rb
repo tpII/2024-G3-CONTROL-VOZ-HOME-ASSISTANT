@@ -9,7 +9,7 @@ module Api
 
         if @resource.save
           # Si el usuario se guarda correctamente, inicia sesión automáticamente
-          sign_in(@resource, store: false, bypass: false)
+          # sign_in(@resource, store: false, bypass: false)
 
           # Crea un token de acceso para el usuario
           token = @resource.create_token
