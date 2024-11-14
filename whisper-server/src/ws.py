@@ -11,27 +11,25 @@ async def connect_to_server(uri):
         print(f"Error: {e}")
 
 
-def test_websocket_connection(url):
+async def test_websocket_connection(url):
     try:
-        # Crear el WebSocket
-        ws = websocket.WebSocket()
 
         # Conectar al servidor
         print(f"Conectando a {url}...")
-        ws.connect(url)
-        print("Conexión WebSocket establecida.")
+        async with websockets.connect(url) as websocket:
+            print("Conexión WebSocket establecida.")
 
-        # Enviar un mensaje de prueba
-        test_message = "Mensaje de prueba desde el cliente Python."
-        print(f"Enviando mensaje: {test_message}")
-        ws.send(test_message)
+            # Enviar un mensaje de prueba
+            test_message = "Mensaje de prueba desde el cliente Python."
+            print("Enviando mensaje")
+            websocket.send(test_message)
 
-        # Recibir la respuesta del servidor
-        response = ws.recv()
-        print(f"Respuesta recibida del servidor: {response}")
+            # Recibir la respuesta del servidor
+            response = websocket.recv()
+            print(f"Respuesta recibida del servidor")
 
-        # Cerrar la conexión
-        ws.close()
+            # Cerrar la conexión
+            websocket.close()
         print("Conexión WebSocket cerrada.")
     except Exception as e:
         print(f"Ocurrió un error: {e}")
