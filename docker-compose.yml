@@ -1,0 +1,37 @@
+version: '3.8'  # Define la versión de Docker Compose
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  # Servicio de la dashboard
+  frontend-dashboard:
+    build: ./dashboard-pwa
+    container_name: frontend-dashboard
+    ports:
+      - "3000:3000" # Puerto mapeado
+
+  # Servicio de la aplicación web (ej. una app en Ruby)
+  webserver:
+    build: ./rails-server
+    container_name: ruby-server
+    env_file:
+      - ./rails-server/.env
+    volumes:
+      - ./rails-server:/app
+    ports:
+      - "12345:12345"
+      - "8080:8080"
+    networks:
+      - app-network
+    stdin_open: true
+    tty: true
+
+  whisper:
+    build: ./whisper-server
+    container_name: whisper-service
+    ports:
+      - "8082:8082"
+    networks:
+      - app-network
