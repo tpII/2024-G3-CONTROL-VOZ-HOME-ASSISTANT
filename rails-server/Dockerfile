@@ -54,6 +54,8 @@ USER rails:rails
 EXPOSE 8080
 EXPOSE 12345
 
+ENV RAILS_LOG_TO_STDOUT="1"
+
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 

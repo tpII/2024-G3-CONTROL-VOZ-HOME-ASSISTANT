@@ -7,23 +7,32 @@ module Api
       def create
         super do |resource|
           # Personaliza la respuesta después de un login exitoso
-          token = resource.create_token
-          expiry_date = token.expiry
-          nice_date = Time.at(expiry_date).in_time_zone('Buenos Aires').strftime('%Y-%m-%d %H:%M:%S')
-          @response_data = {
-            uid:          resource.email,
-            expires_at:   nice_date,
-            access_token: token
-          }
+          resource.create_token
+          resource.save
         end
       end
 
-      protected
+      private
+
+      # Sobrescribe el método para capturar headers antes de enviar la respuesta
+      def update_auth_header
+        super
+        # Almacena headers de autenticación en variables de instancia
+        @token = response.headers['access-token']
+        @uid = response.headers['uid']
+        @client = response.headers['client']
+      end
 
       def render_create_success
         render json: {
-          status: 'success',
-          data:   @response_data
+          status: :success,
+          data:   {
+            uid:          @uid,
+            access_token: {
+              client: @client,
+              token:  @token
+            }
+          }
         }
       end
     end
