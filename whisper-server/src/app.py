@@ -10,7 +10,7 @@ app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
 def index():
-    asyncio.run(test_websocket_connection("ws://rails-server:8080"))
+    asyncio.run(test_websocket_connection("ws://ruby-server:8080"))
     return "Whisper server"
 
 # Only JSON requirement request & response
