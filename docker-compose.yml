@@ -27,4 +27,4 @@ services:
     build: ./whisper-server
     container_name: whisper-service
     ports:
-      - "8081:8081"
+      - "8082:8082"

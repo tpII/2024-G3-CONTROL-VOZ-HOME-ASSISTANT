@@ -19,7 +19,7 @@ RUN apt install -y ffmpeg
 COPY ./src /app/
 
 # Exponer el puerto 5000 (puerto por defecto de Flask)
-EXPOSE 8081
+EXPOSE 8082
 
 ENV PATH="/app/:${PATH}"
 

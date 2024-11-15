@@ -29,4 +29,4 @@ def decode():
 
 # Ejecuta el servidor de desarrollo
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios
+    app.run(host="0.0.0.0", port=8082) # El modo debug muestra errores y reinicia automáticamente el servidor al hacer cambios
