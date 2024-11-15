@@ -2,11 +2,15 @@ from flask import Flask, request
 from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
+from ws import connect_to_server, test_websocket_connection
+import asyncio
+
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
 def index():
+    asyncio.run(test_websocket_connection("ws://rails-server:8080"))
     return "Whisper server"
 
 # Only JSON requirement request & response
