@@ -10,7 +10,7 @@ services:
 
   # Servicio de la aplicación web (ej. una app en Ruby)
   webserver:
-    build: ./rails-server # Imagen de ruby
+    build: ./rails-server
     container_name: ruby-server
     env_file:
       - ./rails-server/.env
@@ -19,7 +19,7 @@ services:
     ports:
       - "12345:12345"
       - "8080:8080"
-    network_mode: host
+#    network_mode: host
     stdin_open: true
     tty: true
 
