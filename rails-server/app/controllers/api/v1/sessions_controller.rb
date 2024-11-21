@@ -8,7 +8,7 @@ module Api
         super do |resource|
           # Personaliza la respuesta después de un login exitoso
           resource.create_token
-          resource.save
+docl          resource.save
         end
       end
 
