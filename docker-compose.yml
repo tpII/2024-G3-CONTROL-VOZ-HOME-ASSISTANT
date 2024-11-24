@@ -35,3 +35,5 @@ services:
       - "8082:8082"
     networks:
       - app-network
+    depends_on:
+      - webserver

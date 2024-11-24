@@ -2,21 +2,17 @@ from flask import Flask, request
 from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
+import websocket
 from ws import register_user, login_user, connect_websocket
 import asyncio
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
+asyncio.run(register_user("http://ruby-server:8080"))
+
 
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
 def index():
-    #asyncio.run(test_websocket_connection("ws://ruby-server:8080"))
-    asyncio.run(register_user("http://ruby-server:8080"))
-    auth_tokens = asyncio.run(login_user("http://ruby-server:8080"))
-
-    # Conexión al WebSocket
-    ws = asyncio.run(connect_websocket(auth_tokens,"ws://ruby-server:8080"))
-
     return "Whisper server"
 
 # Only JSON requirement request & response
@@ -38,8 +34,6 @@ def decode():
     output = decode_audio('output.wav')
     command_output = set_command(str(output))
 
-    ws = asyncio.run(connect_websocket(auth_tokens,"ws://ruby-server:8080"))
-
     # Formatear el mensaje como JSON para enviar a través de WebSocket
     payload = {
         "message": command_output
@@ -47,9 +41,43 @@ def decode():
         #"port": sender_port
     }
     
+
+    # Conexión al WebSocket
+    auth_tokens = login_user("http://ruby-server:8080")
+    #ws = asyncio.run(connect_websocket(auth_tokens,"ws://ruby-server:8080"))
+    access_token = auth_tokens['access_token']
+    client = auth_tokens['client']
+    uid = auth_tokens['uid']
+    print(access_token, client, uid)
+    websocket_params = "tokens={access_token}&email={client}&uid={uid}"
+
+    def on_message(ws, message):
+        print("Mensaje recibido en WebSocket: " + message)
+        if message:
+            print("Mensaje UDP enviado a Wemos: " + message)
+        else:
+            print("Acción no reconocida en WebSocket: " + message)
+
+    def on_open(ws):
+        print('Conexión WebSocket abierta')
+        #ws.send(payload)
     
-    # Enviar el mensaje al WebSocket
-    ws.send(payload)
+    def on_close(ws):
+        print('Conexión WebSocket cerrada')
+    
+    def on_error(ws, error):
+        print("Error en WebSocket: " + str(error))
+
+    
+    ws = websocket.WebSocketApp(
+        "ws://ruby-server:8080/cable?" + websocket_params,
+        on_open=on_open,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close
+    )
+    
+    ws.run_forever()
 
     return command_output
 

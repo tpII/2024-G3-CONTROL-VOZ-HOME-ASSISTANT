@@ -18,6 +18,8 @@ RUN apt install -y ffmpeg
 # Copiar el código de la aplicación Flask al contenedor
 COPY ./src /app/
 
+RUN pip install websocket-client
+
 # Exponer el puerto 5000 (puerto por defecto de Flask)
 EXPOSE 8082
 

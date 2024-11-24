@@ -7,8 +7,8 @@ module Api
       def create
         super do |resource|
           # Personaliza la respuesta después de un login exitoso
-          resource.create_token
-docl          resource.save
+          resource.create_token      
+          resource.save
         end
       end
 
