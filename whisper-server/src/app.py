@@ -49,7 +49,7 @@ def decode():
     client = auth_tokens['client']
     uid = auth_tokens['uid']
     print(access_token, client, uid)
-    websocket_params = "tokens={access_token}&email={client}&uid={uid}"
+    websocket_params = "access-token={access_token}&email={client}&uid={uid}"
 
     def on_message(ws, message):
         print("Mensaje recibido en WebSocket: " + message)
