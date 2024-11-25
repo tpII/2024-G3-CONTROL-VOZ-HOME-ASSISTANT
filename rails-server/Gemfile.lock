@@ -152,7 +152,6 @@ GEM
     ffi (1.17.0-x86-linux-gnu)
     ffi (1.17.0-x86_64-darwin)
     ffi (1.17.0-x86_64-linux-gnu)
-    foreman (0.88.1)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.6)
@@ -384,7 +383,6 @@ DEPENDENCIES
   factory_bot_rails
   faker
   faraday
-  foreman
   json_matchers
   listen
   pry-byebug
