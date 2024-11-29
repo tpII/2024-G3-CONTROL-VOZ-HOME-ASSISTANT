@@ -3,7 +3,7 @@ from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
 import websocket
-from ws import register_user, login_user, connect_websocket
+from ws import register_user, login_user
 import asyncio
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
@@ -44,7 +44,6 @@ def decode():
 
     # Conexión al WebSocket
     auth_tokens = login_user("http://ruby-server:8080")
-    #ws = asyncio.run(connect_websocket(auth_tokens,"ws://ruby-server:8080"))
     access_token = auth_tokens['access_token']
     client = auth_tokens['client']
     uid = auth_tokens['uid']
