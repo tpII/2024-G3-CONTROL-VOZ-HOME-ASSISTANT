@@ -52,7 +52,6 @@ RUN useradd rails --create-home --shell /bin/bash && \
 USER rails:rails
 
 EXPOSE 8080
-EXPOSE 12345
 
 ENV RAILS_LOG_TO_STDOUT="1"
 
@@ -61,5 +60,4 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
 CMD ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "8080"]
-#CMD ["bundle", "exec", "foreman", "start"]
 

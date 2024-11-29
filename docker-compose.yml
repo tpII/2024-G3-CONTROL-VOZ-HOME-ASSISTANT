@@ -21,8 +21,19 @@ services:
     volumes:
       - ./rails-server:/app
     ports:
-      - "12345:12345"
       - "8080:8080"
+    networks:
+      - app-network
+    stdin_open: true
+    tty: true
+
+  udp-server:
+    build: ./udp-server
+    container_name: udp-server
+    volumes:
+      - ./udp-server:/app
+    ports:
+      - "12345:12345/udp"
     networks:
       - app-network
     stdin_open: true
