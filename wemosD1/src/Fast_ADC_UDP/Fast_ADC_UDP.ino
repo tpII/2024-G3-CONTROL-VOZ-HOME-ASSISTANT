@@ -6,15 +6,15 @@ const char* ssid = "Free";
 const char* password = "123123123";
 
 // Configuración de UDP
-const char* udpAddress = "192.168.161.57"; // Dirección IP de la computadora
+const char* udpAddress = "192.168.15.57"; // Dirección IP de la computadora
 const int udpPort = 12345; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
 
-#define num_samples 512
+#define num_samples 32
 uint16_t adc_addr[num_samples+1]; // point to the address of ADC continuously fast sampling output
 uint16_t adc_num = num_samples; // sampling number of ADC continuously fast sampling, range [1, 65535]
-uint8_t adc_clk_div = 8; // ADC working clock = 80M/adc_clk_div, range [8, 32], the recommended value is 8
+uint8_t adc_clk_div = 16; // ADC working clock = 80M/adc_clk_div, range [8, 32], the recommended value is 8
 
 void setup() {
   Serial.begin(115200);
