@@ -4,6 +4,7 @@ import "../globals.css";
 
 import { InstallButton } from "@/components/app/install-button";
 import { InstallPromptProvider } from "@/contexts/install-prompt";
+import { WebSocketProvider } from "@/contexts/websocket";
 
 export const metadata: Metadata = {
   title: "Taller 2 Dashboard",
@@ -28,18 +29,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="container m-auto grid min-h-screen grid-rows-[auto,1fr,auto] bg-background px-4 font-sans antialiased">
-        <InstallPromptProvider>
-          <header className="text-xl font-bold leading-[4rem] p-12 flex gap-8">
-            <h1 className="text-3xl font-bold text-white mb-6">
-              Taller 2 Dashboard
-            </h1>
-            <InstallButton />
-          </header>
-          <main className="px-12">{children}</main>
-          <footer className="text-center leading-[4rem] opacity-70">
-            © {new Date().getFullYear()} Taller 2 Dashboard
-          </footer>
-        </InstallPromptProvider>
+        <WebSocketProvider>
+          <InstallPromptProvider>
+            <header className="text-xl font-bold leading-[4rem] p-12 flex gap-8">
+              <h1 className="text-3xl font-bold text-white mb-6">
+                Taller 2 Dashboard
+              </h1>
+              <InstallButton />
+            </header>
+            <main className="px-12">{children}</main>
+            <footer className="text-center leading-[4rem] opacity-70">
+              © {new Date().getFullYear()} Taller 2 Dashboard
+            </footer>
+          </InstallPromptProvider>
+        </WebSocketProvider>
       </body>
     </html>
   );
