@@ -1,5 +1,8 @@
 require 'active_support/core_ext/integer/time'
 
+WHISPER_URL = ENV['WHISPER_URL']
+WHISPER_PORT = ENV['WHISPER_PORT']
+
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -71,7 +74,7 @@ Rails.application.configure do
   config.action_cable.allowed_request_origins = [%r{http://*}, %r{https://*}, %r{file://*}, 'file://',
                                                  'localhost:8080','http://localhost:8080', 'http://127.0.0.1:8080', nil,
                                                  'ws://localhost:8080', 'ws://127.0.0.1:8080', 'ws://websocket:8080',
-                                                 'ws://webserver:8080']
+                                                 'ws://webserver:8080', "#{WHISPER_URL}:#{WHISPER_PORT}"]
   config.hosts << 'webserver'
 
   # Raise error when a before_action's only/except options reference missing actions
