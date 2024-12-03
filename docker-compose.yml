@@ -35,6 +35,8 @@ services:
       - WEMOS_PORT=4040
       - WHISPER_PORT=8083
       - WHISPER_URL=http://whisper
+      - UDP_SERVER_HOST=udp-server
+      - UDP_SERVER_PORT=12345
 
   udp-server:
     build: ./udp-server

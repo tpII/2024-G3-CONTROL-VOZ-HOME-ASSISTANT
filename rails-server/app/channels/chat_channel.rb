@@ -1,35 +1,32 @@
 require 'socket'
 class ChatChannel < ApplicationCable::Channel
-  # Mapea las acciones recibidas a los mensajes UDP para la Wemos D1
-  ACTION_TO_UDP = {
-    'turn_on'  => { word: 'C_connect' },
-    'turn_off' => { word: 'C_disconnect' }
-  }.freeze
-  # Configuración del servidor UDP para Wemos
-  WEMOS_IP = '192.168.1.70'.freeze # IP de la Wemos D1
-  WEMOS_PORT = 8080 # Puerto UDP de la Wemos D1
+  UDP_SERVER_HOST = ENV["UDP_SERVER_HOST"]
+  UDP_SERVER_PORT = ENV["UDP_SERVER_PORT"].to_i
 
   def subscribed
-    stream_for "chat_#{params[:room]}"
+    stream_for 'chat_channel'
+
+    current_state = Rails.cache.fetch("led_state", default: "OFF")
+    transmit({ message: current_state })
   end
 
-  def perform_action(data)
-    # Manejamos el mensaje recibido desde el frontend
-    message = data['message']
-    transmit(message)
-    logger.add_tags 'ChatChannel', "\n #{data} RECIBIDO DESDE LA APP \n"
-    action = ACTION_TO_UDP[data['action']]
-    send_udp_command(action)
+  def receive(data)
+    begin
+      Rails.cache.write("led_state", data["message"])
+      send_udp_command(data["message"])
+      ActionCable.server.broadcast("chat_channel", { message: data["message"] })
+    end
   end
 
   private
 
-  # Método para enviar datos a la WEMOS D1 a través de UDP
-  def send_udp_command(word)
-    udp_socket = UDPSocket.new
-
-    logger.add_tags 'ChatChannel', "\n Enviando #{word} mensaje a la WEMOS \n"
-    udp_socket.send(word.to_json, 0, WEMOS_IP, WEMOS_PORT)
-    udp_socket.close
+  def send_udp_command(command)
+    UDPSocket.open do |socket|
+      udp_host = UDP_SERVER_HOST || "127.0.0.1"
+      udp_port = UDP_SERVER_PORT || "12345"
+      socket.send(command, 0, udp_host, udp_port.to_i)
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error enviando comando UDP: #{e.message}"
   end
 end
