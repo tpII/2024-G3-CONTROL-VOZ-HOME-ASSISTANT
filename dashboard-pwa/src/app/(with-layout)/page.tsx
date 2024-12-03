@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { Lightbulb } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import WebSocketMessagesBox from "@/components/app/websocket-messages-box";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function Component() {
-  const [isLightOn, setIsLightOn] = useState(false);
+  const { sendMessage, ledState } = useWebSocket();
+
+  const isLightOn = ledState === "ON";
 
   const toggleLight = () => {
-    setIsLightOn(!isLightOn);
+    sendMessage(isLightOn ? "TURN_OFF" : "TURN_ON");
   };
 
   return (
@@ -43,11 +44,6 @@ export default function Component() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gray-900 border-gray-800">
-        <CardContent className="p-4">
-          <WebSocketMessagesBox />
         </CardContent>
       </Card>
     </div>

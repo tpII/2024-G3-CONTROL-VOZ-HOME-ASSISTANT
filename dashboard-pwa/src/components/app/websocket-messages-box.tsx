@@ -21,7 +21,15 @@ export default function WebSocketMessagesBox() {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("WebSocket connection established!");
+      ws.send(
+        JSON.stringify({
+          command: "subscribe",
+          identifier: JSON.stringify({
+            channel: "ChatChannel",
+            room: "my_room",
+          }),
+        })
+      );
     };
 
     ws.onmessage = (event) => {
