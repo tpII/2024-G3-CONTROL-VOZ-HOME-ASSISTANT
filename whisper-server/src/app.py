@@ -3,12 +3,15 @@ from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
 import websocket
-from ws import register_user, login_user
+from ws import register_user
+import requests
 import asyncio
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
 asyncio.run(register_user("http://ruby-server:8080"))
 
+UDP_UID = "udp3@server.com" # os.get
+UDP_PASSWORD = "123456789" # os.get
 
 # Define una ruta y una función de vista para la URL raíz
 @app.route('/')
@@ -43,11 +46,14 @@ def decode():
     
 
     # Conexión al WebSocket
-    access_token = request.get_json().get('access_token', "")
-    client = request.get_json().get('client', "")
-    uid = request.get_json().get('uid', "")
-    print(access_token, client, uid)
-    websocket_params = "access-token={access_token}&client={client}&uid={uid}"
+    data = {
+        "email": UDP_UID,
+        "password": UDP_PASSWORD
+    }
+    response = requests.post("http://ruby-server:8080/auth/sign_in",data)
+    headers = response.headers
+
+    websocket_params = "access-token={headers.get('access-token')}&client={headers.get('client')}&uid={headers.get('uid')}"
 
     def on_message(ws, message):
         print("Mensaje recibido en WebSocket: " + message)
@@ -75,7 +81,9 @@ def decode():
         on_close=on_close
     )
     
+    ws.send(payload)
     ws.run_forever()
+    
 
     return command_output
 
