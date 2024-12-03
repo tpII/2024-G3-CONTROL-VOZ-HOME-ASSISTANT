@@ -3,10 +3,10 @@
 import { Lightbulb } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useWebSocketContext } from "@/contexts/websocket";
 
 export default function Component() {
-  const { sendMessage, ledState } = useWebSocket();
+  const { sendMessage, ledState } = useWebSocketContext();
 
   const isLightOn = ledState === "ON";
 
