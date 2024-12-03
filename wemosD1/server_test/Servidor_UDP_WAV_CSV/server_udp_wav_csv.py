@@ -63,12 +63,7 @@ with open(csv_filename, 'w', newline='') as csv_file:
         try:
             # Esperar datos
             data, addr = sock.recvfrom(1028)
-            
-            # Verificar si se recibieron datos suficientes
-            if len(data) < 1026:
-                print(f"🚫 Paquete de tamaño inesperado de {addr}, descartado.")
-                continue
-            
+                      
             # Reagrupar los datos de 8 bits en enteros de 16 bits
             received_data = [int.from_bytes(data[i:i+2], 'little') 
                            for i in range(0, len(data) - 2, 2)]
