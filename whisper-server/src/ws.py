@@ -4,8 +4,8 @@ import asyncio
 
 
 # Configuraciones del servidor
-UDP_UID = 'udp@server.com' # os.get
-UDP_PASSWORD = 123456789 # os.get
+UDP_UID = "udp3@server.com" # os.get
+UDP_PASSWORD = "123456789" # os.get
 COMMANDS_TO_UDP = {
     'turn_on': {'word': 'C_connect'},
     'turn_off': {'word': 'C_disconnect'}
@@ -27,15 +27,15 @@ async def register_user(API_URL='http://localhost:8080'):
     return response
 
 # Función para realizar login y obtener los tokens
-def login_user(API_URL='http://localhost:8080'):
+def login_user(API_URL):
     login_endpoint = '/auth/sign_in'
     url = API_URL + login_endpoint
     headers = {'Content-Type': 'application/json'}
     data = {
         "email": UDP_UID,
-        "password": str(UDP_PASSWORD)
+        "password": UDP_PASSWORD
     }
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, data=data)
     headers = response.headers
     return {
         "uid": headers.get('uid'),

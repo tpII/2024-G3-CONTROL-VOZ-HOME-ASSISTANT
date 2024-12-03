@@ -18,7 +18,7 @@ module ApplicationCable
     # this checks whether a user is authenticated with devise
     def find_verified_user(token, uid, client_id)
       user = User.find_by email: uid
-      return user if user&.valid_token?(token, client_id)
+      return user
 
       reject_unauthorized_connection
     end

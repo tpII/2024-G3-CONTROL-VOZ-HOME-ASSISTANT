@@ -43,12 +43,11 @@ def decode():
     
 
     # Conexión al WebSocket
-    auth_tokens = login_user("http://ruby-server:8080")
-    access_token = auth_tokens['access_token']
-    client = auth_tokens['client']
-    uid = auth_tokens['uid']
+    access_token = request.get_json().get('access_token', "")
+    client = request.get_json().get('client', "")
+    uid = request.get_json().get('uid', "")
     print(access_token, client, uid)
-    websocket_params = "access-token={access_token}&email={client}&uid={uid}"
+    websocket_params = "access-token={access_token}&client={client}&uid={uid}"
 
     def on_message(ws, message):
         print("Mensaje recibido en WebSocket: " + message)
