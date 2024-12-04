@@ -11,11 +11,11 @@ const int udpPort = 12345; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
 
-#define num_samples 512
-uint16_t adc_addr[num_samples]; // point to the address of ADC continuously fast sampling output
-uint16_t adc_num = num_samples; // sampling number of ADC continuously fast sampling, range [1, 65535]
+#define sample_size 2048
+#define compres_ratio 8 //suavizado maximo 64x
+uint16_t adc_addr[sample_size]; // point to the address of ADC continuously fast sampling output
+uint16_t bufer_compress[2*sample_size/compres_ratio];
 uint8_t adc_clk_div = 16; // ADC working clock = 80M/adc_clk_div, range [8, 32], the recommended value is 8
-
 
 // Mapeo de pines (vector de constantes)
 const uint8_t PIN_MAP[] = {
@@ -74,15 +74,42 @@ void checkIncomingCommands() {
     }
 }
 
-void loop() {
-  // lee el ADC
+void adcRead(){
+  wifi_set_opmode(NULL_MODE);
+  system_soft_wdt_stop();
+  ets_intr_lock( ); //close interrupt
   noInterrupts();
-  system_adc_read_fast(adc_addr, adc_num, adc_clk_div);
-  interrupts();
 
+
+  system_adc_read_fast(adc_addr, sample_size, adc_clk_div);
+  /*for(int i=0;i<sample_size;i++){
+    adc_addr[i]=system_adc_read();
+  }*/
+
+  interrupts();
+  ets_intr_unlock(); //open interrupt
+  system_soft_wdt_restart();
+}
+void comprimir(uint8_t offset, uint8_t compresX ){
+  for(int i=0;i<(sample_size/compresX);i++){//buffer init
+    bufer_compress[i+offset]=0;
+  }
+  for(int i=0;i<sample_size;i++){// buffer acum
+    bufer_compress[offset+i/compresX]+=adc_addr[i];
+  }
+  for(int i=0;i<(sample_size/compresX);i++){//buffer promedio
+    bufer_compress[offset+i]=bufer_compress[i]/compresX;
+  }
+}
+
+void loop() {
+  adcRead();
+  comprimir(0,compres_ratio);
+  adcRead();
+  comprimir( (sample_size/compres_ratio),compres_ratio);
   // Enviar datos por UDP
   udp.beginPacket(udpAddress, udpPort);
-  udp.write((uint8_t*) adc_addr, 2*(num_samples) );
+  udp.write((uint8_t*) adc_addr, 2*(sample_size) );
   udp.endPacket();
 
   checkIncomingCommands();
