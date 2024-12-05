@@ -5,12 +5,12 @@ import wave
 import struct
 import os
 
-def capture_serial_data(port='COM3', baud_rate=921600, duration=10):
+def capture_serial_data(port='COM6', baud_rate=921600, duration=10):
     """
     Captura datos seriales y los guarda en archivos RAW y WAV
     
     Args:
-        port (str): Puerto serial (ej: 'COM3' en Windows, '/dev/ttyUSB0' en Linux)
+        port (str): Puerto serial (ej: 'COM6' en Windows, '/dev/ttyUSB0' en Linux)
         baud_rate (int): Velocidad en baudios
         duration (int): Duración de la captura en segundos
     """
@@ -91,7 +91,7 @@ def capture_serial_data(port='COM3', baud_rate=921600, duration=10):
 
 if __name__ == "__main__":
     # Puedes modificar estos parámetros según tu configuración
-    PUERTO_SERIAL = 'COM3'  # Cambia esto según tu puerto
+    PUERTO_SERIAL = 'COM6'  # Cambia esto según tu puerto
     BAUD_RATE = 921600     # Ajusta según la velocidad de tu ESP8266
     DURACION = 10          # Duración en segundos
     
