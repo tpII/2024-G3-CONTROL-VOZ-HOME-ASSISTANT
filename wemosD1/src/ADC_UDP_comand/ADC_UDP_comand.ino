@@ -75,7 +75,7 @@ void checkIncomingCommands() {
 }
 
 void adcRead(){
-  wifi_set_opmode(NULL_MODE);
+  //wifi_set_opmode(NULL_MODE);
   system_soft_wdt_stop();
   ets_intr_lock( ); //close interrupt
   noInterrupts();
@@ -89,6 +89,7 @@ void adcRead(){
   interrupts();
   ets_intr_unlock(); //open interrupt
   system_soft_wdt_restart();
+  //wifi_set_opmode(STATIONAP_MODE);
 }
 void comprimir(uint8_t offset, uint8_t compresX ){
   for(int i=0;i<(sample_size/compresX);i++){//buffer init
@@ -106,10 +107,23 @@ void loop() {
   adcRead();
   comprimir(0,compres_ratio);
 
+/*  if (WiFi.status() != WL_CONNECTED) { // test de reconeccion
+    Serial.println("Conexión WiFi perdida. Reconectando...");
+    return;
+  }
+*/
   // Enviar datos por UDP
   udp.beginPacket(udpAddress, udpPort);
   udp.write((uint8_t*) bufer_compress, 2*(sample_size/compres_ratio) );
   udp.endPacket();
+  
+  /* Verifica si el paquete se envió correctamente
+  if(udp.endPacket()) {
+      Serial.println("Paquete UDP enviado correctamente");
+      Serial.printf("Tamaño del paquete: %d bytes\n", 2*(sample_size/compres_ratio));
+  } else {
+      Serial.println("Error al enviar paquete UDP");
+  }*/
 
   /*for (int j=0; j<sample_size/compres_ratio;  j++) {
     Serial.println(bufer_compress[j]); // ver todos los datos enviados
