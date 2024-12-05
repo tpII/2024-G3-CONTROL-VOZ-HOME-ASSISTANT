@@ -3,12 +3,10 @@ from decode import decode_audio, remove_silence_librosa
 from utils import array_to_wav
 from actions import set_command
 import websocket
-from ws import register_user
+from udp import udp_client_receive_and_send 
 import requests
-import asyncio
 
 app = Flask(__name__)  # Crea una instancia de la aplicación Flask
-asyncio.run(register_user("http://ruby-server:8080"))
 
 UDP_UID = "udp3@server.com" # os.get
 UDP_PASSWORD = "123456789" # os.get
@@ -44,48 +42,9 @@ def decode():
         #"port": sender_port
     }
     
+    udp_client_receive_and_send('192.168.1.70', '4040', payload)
 
-    # Conexión al WebSocket
-    data = {
-        "email": UDP_UID,
-        "password": UDP_PASSWORD
-    }
-    response = requests.post("http://ruby-server:8080/auth/sign_in",data)
-    headers = response.headers
-
-    websocket_params = "access-token={headers.get('access-token')}&client={headers.get('client')}&uid={headers.get('uid')}"
-
-    def on_message(ws, message):
-        print("Mensaje recibido en WebSocket: " + message)
-        if message:
-            print("Mensaje UDP enviado a Wemos: " + message)
-        else:
-            print("Acción no reconocida en WebSocket: " + message)
-
-    def on_open(ws):
-        print('Conexión WebSocket abierta')
-        #ws.send(payload)
-    
-    def on_close(ws):
-        print('Conexión WebSocket cerrada')
-    
-    def on_error(ws, error):
-        print("Error en WebSocket: " + str(error))
-
-    
-    ws = websocket.WebSocketApp(
-        "ws://ruby-server:8080/cable?" + websocket_params,
-        on_open=on_open,
-        on_message=on_message,
-        on_error=on_error,
-        on_close=on_close
-    )
-    
-    ws.send(payload)
-    ws.run_forever()
-    
-
-    return command_output
+    return payload
 
 # Ejecuta el servidor de desarrollo
 if __name__ == '__main__':
