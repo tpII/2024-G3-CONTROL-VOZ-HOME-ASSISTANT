@@ -1,2 +1,2 @@
-pip install numpy keyboard
+pip install -r Requierements.txt
 py ./server.py
