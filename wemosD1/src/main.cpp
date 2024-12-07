@@ -1,154 +1,166 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include <FreeRTOS.h>
-#include <timers.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
-#include "user_interface.h" // Para system_adc_read()
 
-// Configuración
-struct Config {
-    const char* ssid = "Lucky";
-    const char* password = "123412341234";
-    const char* udpAddress = "192.168.1.10";  // Dirección del receptor
-    const uint16_t udpPort = 4444;
-    const uint32_t adcFrequency = 44000;  // Frecuencia de muestreo
-    const uint16_t bufferSize = 512;      // Tamaño del buffer
-    const uint16_t maxRetries = 3;        // Máximo de reintentos UDP
-};
+// Configuración de WiFi
+const char* ssid = "Lucky";
+const char* password = "123412341234";
 
-Config config;
+// Configuración de UDP
+const char* udpAddress = "192.168.1.66"; // Dirección IP de la computadora
+const int udpPort = 12345; // Puerto en el que el servidor escucha
+
 WiFiUDP udp;
 
-// Buffer ping-pong
-uint16_t samples[512][2];  // [muestras][buffer_index]
-volatile uint8_t currentWriteBuffer = 0;
-volatile uint8_t currentReadBuffer = 1;
+#define sample_size 4096
+#define compres_ratio 8 //suavizado maximo 64x
+uint16_t adc_addr[sample_size]; // point to the address of ADC continuously fast sampling output
+uint16_t bufer_compress[sample_size/compres_ratio];
+uint8_t adc_clk_div = 16; // ADC working clock = 80M/adc_clk_div, range [8, 32], the recommended value is 8
 
-// Sincronización
-SemaphoreHandle_t bufferMutex;
-SemaphoreHandle_t writeSemaphore;
-SemaphoreHandle_t readSemaphore;
+uint8_t triger_silence=25; // valor gatillo para distinguir silencios (desviacion permitida de silencio)
 
-// Temporizador para ADC
-hw_timer_t * timer = NULL;
-
-// Función para envío UDP no bloqueante
-class NonBlockingUDP {
-private:
-    WiFiUDP& udp;
-    const Config& config;
-    
-public:
-    NonBlockingUDP(WiFiUDP& _udp, const Config& _config) : udp(_udp), config(_config) {}
-    
-    bool sendPacket(uint16_t* data, size_t length) {
-        uint8_t retries = 0;
-        while (retries < config.maxRetries) {
-            if (udp.beginPacket(config.udpAddress, config.udpPort)) {
-                udp.write((uint8_t*)data, length * 2);
-                if (udp.endPacket()) {
-                    return true;
-                }
-            }
-            retries++;
-            taskYIELD();  // Ceder el control a otras tareas
-        }
-        return false;
-    }
+// Mapeo de pines (vector de constantes)
+const uint8_t PIN_MAP[] = {
+    D0,  // Índice 0
+    D1,  // Índice 1
+    D2,  // Índice 2
+    D3,  // Índice 3
+    D4,  // Índice 4
+    D5,  // Índice 5
+    D6,  // Índice 6
+    D7,  // Índice 7
+    D8,  // Índice 8
+    D9   // Índice 9
 };
-
-NonBlockingUDP nbUdp(udp, config);
-
-// Tarea de grabación ADC
-void recordTask(void * parameter) {
-    uint16_t sampleIndex = 0;
-    
-    while (true) {
-        // Esperar si el buffer está lleno y siendo leído
-        xSemaphoreTake(writeSemaphore, portMAX_DELAY);
-        
-        // Tomar muestra del ADC
-        uint16_t sample = system_adc_read();
-        samples[sampleIndex][currentWriteBuffer] = sample;
-        
-        sampleIndex++;
-        
-        if (sampleIndex >= config.bufferSize) {
-            sampleIndex = 0;
-            
-            // Cambiar buffer
-            xSemaphoreTake(bufferMutex, portMAX_DELAY);
-            currentWriteBuffer = (currentWriteBuffer + 1) % 2;
-            xSemaphoreGive(bufferMutex);
-            
-            // Señalizar que hay datos para enviar
-            xSemaphoreGive(readSemaphore);
-        }
-    }
-}
-
-// Tarea de envío
-void sendTask(void * parameter) {
-    while (true) {
-        // Esperar a que haya un buffer lleno para enviar
-        xSemaphoreTake(readSemaphore, portMAX_DELAY);
-        
-        // Enviar buffer actual
-        nbUdp.sendPacket(&samples[0][currentReadBuffer], config.bufferSize);
-        
-        // Cambiar al siguiente buffer
-        xSemaphoreTake(bufferMutex, portMAX_DELAY);
-        currentReadBuffer = (currentReadBuffer + 1) % 2;
-        xSemaphoreGive(bufferMutex);
-        
-        // Señalizar que el buffer está disponible para escritura
-        xSemaphoreGive(writeSemaphore);
-    }
-}
+const int NUM_PINS = sizeof(PIN_MAP) / sizeof(PIN_MAP[0]);
+uint8_t cmdBuffer[2];
 
 void setup() {
-    Serial.begin(115200);
-    
-    // Inicializar WiFi
-    WiFi.begin(config.ssid, config.password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  // Esperar la conexión a WiFi
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConectado a WiFi.");
+  udp.begin(udpPort);  // Inicializa UDP
+}
+
+// Función para procesar comandos recibidos
+void processCommand(uint8_t pinIndex, uint8_t state) {
+
+    if(state==0xFF){ // consulta
+      if(pinIndex==0xFF){//por todos los pines
+        udp.beginPacket(udpAddress, udpPort);
+        for(int i=0;i<NUM_PINS;i++){
+          udp.write((uint8_t*) &i, 1 );
+          uint8_t pin_state=digitalRead(PIN_MAP[pinIndex]);
+          udp.write((uint8_t*) &pin_state, 1 );
+        }
+        udp.endPacket();
+      }else{
+        if(pinIndex < NUM_PINS){
+          udp.beginPacket(udpAddress, udpPort);
+          udp.write((uint8_t*) &pinIndex, 1 );
+          uint8_t pin_state=digitalRead(PIN_MAP[pinIndex]);
+          udp.write((uint8_t*) &pin_state, 1 );
+          udp.endPacket();
+        }
+      }
     }
+    // Verificar que el índice del pin y su estado sea válido
+    if ((pinIndex < NUM_PINS)&& (state< 2)) {
+      uint8_t pin = PIN_MAP[pinIndex];
+      
+      pinMode(pin,OUTPUT); // Establecer el pin como salida
+
+      // Establecer el estado
+      digitalWrite(pin, (bool) state);
+      
+      // Debug - Imprimir información del comando ejecutado
+      Serial.printf("Comando ejecutado - Pin: %d, Estado: %d\n", pin, state);
+    }
+}
+
+// Función para verificar y procesar comandos entrantes de manera no bloqueante
+void checkIncomingCommands() {
+    int packetSize = udp.parsePacket();
     
-    // Inicializar UDP
-    udp.begin(config.udpPort);
-    
-    // Crear semáforos
-    bufferMutex = xSemaphoreCreateMutex();
-    writeSemaphore = xSemaphoreCreateBinary();
-    readSemaphore = xSemaphoreCreateBinary();
-    
-    // Inicialmente, el buffer de escritura está disponible
-    xSemaphoreGive(writeSemaphore);
-    
-    // Crear tareas
-    xTaskCreate(
-        recordTask,
-        "Record",
-        1024,    // Stack size
-        NULL,    // Task parameters
-        2,       // Priority
-        NULL     // Task handle
-    );
-    
-    xTaskCreate(
-        sendTask,
-        "Send",
-        1024,    // Stack size
-        NULL,    // Task parameters
-        1,       // Priority
-        NULL     // Task handle
-    );
+    if (packetSize == 2) {  // Solo procesar si recibimos exactamente 2 bytes
+        udp.read(cmdBuffer, 2);
+        
+        // Extraer información del comando
+        uint8_t pinIndex = cmdBuffer[0];
+        uint8_t state = cmdBuffer[1];
+        
+        // Procesar el comando
+        processCommand(pinIndex, state);
+    }
+}
+
+void adcRead(){
+  //wifi_set_opmode(NULL_MODE);
+  system_soft_wdt_stop();
+  ets_intr_lock( ); //close interrupt
+  noInterrupts();
+
+
+  system_adc_read_fast(adc_addr, sample_size, adc_clk_div);
+  /*for(int i=0;i<sample_size;i++){
+    adc_addr[i]=system_adc_read();
+  }*/
+
+  interrupts();
+  ets_intr_unlock(); //open interrupt
+  system_soft_wdt_restart();
+  //wifi_set_opmode(STATIONAP_MODE);
+}
+void comprimir(uint8_t offset, uint8_t compresX ){
+  for(int i=0;i<(sample_size/compresX);i++){//buffer init
+    bufer_compress[offset+i]=0;
+  }
+  for(int i=0;i<sample_size;i++){// buffer acum
+    bufer_compress[offset+i/compresX]+=adc_addr[i];
+  }
+  for(int i=0;i<(sample_size/compresX);i++){//buffer promedio
+    bufer_compress[offset+i]=bufer_compress[offset+i]/compresX;
+  }
+}
+
+uint8_t is_silence(){
+  uint16_t promedio_inicial=0;
+  uint8_t i;
+  for(i=0;i<8;i++){ // calcula el promedio de las primeras muestras
+    promedio_inicial+=bufer_compress[i];
+  }
+  uint16_t bufer_size = (sample_size/compres_ratio);
+  while((i<bufer_size)){
+    if(bufer_compress[i]<promedio_inicial-triger_silence)return 0; // si encuentra algun valor mayor al primer promedio, considera sonido
+    if(bufer_compress[i]>promedio_inicial+triger_silence)return 0;
+    i++;
+  }
+  return 1;
+
 }
 
 void loop() {
-    // El loop principal no se usa ya que FreeRTOS maneja las tareas
-    vTaskDelete(NULL);
+  adcRead();
+  comprimir(0,compres_ratio);
+
+/*  if (WiFi.status() != WL_CONNECTED) { // test de reconeccion
+    Serial.println("Conexión WiFi perdida. Reconectando...");
+    return;
+  }
+*/
+  if(!is_silence()){
+    // Enviar datos por UDP
+    udp.beginPacket(udpAddress, udpPort);
+    udp.write((uint8_t*) bufer_compress, 2*(sample_size/compres_ratio) );
+    udp.endPacket();
+  }
+
+  checkIncomingCommands();
+
 }
