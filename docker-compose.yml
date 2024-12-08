@@ -69,3 +69,21 @@ services:
       - WEBSOCKET_PORT=8080
       - WEMOS_IP=192.168.1.70
       - WEMOS_PORT=4040
+
+  wemos:
+    build: ./wemosD1/server_test/Server_UDP_comands_py
+    container_name: wemos
+    volumes:
+      - ./wemosD1/server_test/Server_UDP_comands_py:/app
+    ports:
+      - "4040:4040"
+    networks:
+      - app-network
+    stdin_open: true
+    tty: true
+    environment:
+      - WEBSERVER_URL=http://webserver:8080
+      - WEBSOCKET_URL=ws://webserver:8080
+      - WEBSOCKET_PORT=8080
+      - WEMOS_IP=192.168.1.70
+      - WEMOS_PORT=4040
