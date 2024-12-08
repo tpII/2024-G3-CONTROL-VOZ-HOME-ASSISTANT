@@ -1,5 +1,9 @@
 import socket
 import logging
+import numpy as np
+import wave
+from datetime import datetime
+import os
 
 logging.basicConfig(
     filename='log/udp_server.log',
@@ -14,6 +18,9 @@ class ServidorUDP:
         self.running = True
         self.host = host
         self.port = port
+        self.archivos_wav = [] 
+        self.collected_data = []  
+        self.tiempo_inicio = None
         logging.info(f"🎧 Servidor UDP iniciado en {host}:{port}")
         print(f"🎧 Servidor UDP escuchando en {host}:{port}")
 
@@ -68,3 +75,47 @@ class ServidorUDP:
         self.sock.close()
     logging.info("Servidor UDP detenido")
     print("Servidor UDP detenido")
+
+    def guardar_wav(self, datos, sample_rate=15000):
+        """
+        Guarda los datos de audio como archivo WAV si duran más de 2 segundos
+        """
+        try:
+            if len(datos) < sample_rate * 2:  # Menos de 2 segundos
+                logging.info("❌ Audio descartado por ser menor a 2 segundos")
+                return None
+                
+            # Normalizar datos
+            normalized_data = np.array(datos, dtype=np.int16)
+            normalized_data = ((normalized_data-512) * 64)
+            
+            # Generar nombre de archivo
+            filename = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+            filepath = f"./udp_audios/{filename}"
+            
+            # Guardar archivo WAV
+            with wave.open(filepath, 'w') as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(sample_rate)
+                wav_file.writeframes(normalized_data.tobytes())
+            
+            self.archivos_wav.append(filepath)
+            logging.info(f"✅ Audio guardado: {filepath}")
+            return filepath
+            
+        except Exception as e:
+            logging.error(f"❌ Error guardando WAV: {e}")
+            return None
+
+    def eliminar_wav_antiguo(self):
+        """
+        Elimina el archivo WAV más antiguo de la lista
+        """
+        try:
+            if self.archivos_wav:
+                archivo_antiguo = self.archivos_wav.pop(0)  # Eliminar y obtener el más antiguo
+                os.remove(archivo_antiguo)
+                logging.info(f"🗑️ Archivo eliminado: {archivo_antiguo}")
+        except Exception as e:
+            logging.error(f"❌ Error eliminando archivo WAV: {e}")
