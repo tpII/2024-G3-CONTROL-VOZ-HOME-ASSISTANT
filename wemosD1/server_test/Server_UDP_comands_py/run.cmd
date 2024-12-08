@@ -1,2 +1,2 @@
-pip install -r Requierements.txt
+pip install -r requierements.txt
 py ./server.py
