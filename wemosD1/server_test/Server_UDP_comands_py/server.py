@@ -14,7 +14,7 @@ class ServidorUDP:
             'UDP_IP': "0.0.0.0",
             'UDP_PORT': 12345,
             'SAMPLE_RATE': 15000,
-            'RECORDING_DURATION': 30  # segundos
+            'RECORDING_DURATION': 3  # segundos
         }
         
         # Variables de estado
