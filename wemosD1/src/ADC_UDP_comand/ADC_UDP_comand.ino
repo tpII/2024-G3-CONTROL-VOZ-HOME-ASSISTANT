@@ -6,7 +6,7 @@ const char* ssid = "Lucky";
 const char* password = "123412341234";
 
 // Configuración de UDP
-const char* udpAddress = "192.168.1.66"; // Dirección IP de la computadora
+const char udpAddress[16] = "192.168.1.10"; // Dirección IP de la computadora
 const int udpPort = 12345; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
@@ -46,6 +46,7 @@ void setup() {
   }
   Serial.println("\nConectado a WiFi.");
   udp.begin(udpPort);  // Inicializa UDP
+  // udp.read(udpAddress, 13); // opcion adicional de reconfigurar la IP demanera dinamica
 }
 
 // Función para procesar comandos recibidos
