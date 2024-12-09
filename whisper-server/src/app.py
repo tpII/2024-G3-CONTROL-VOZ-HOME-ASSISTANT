@@ -40,17 +40,22 @@ def process_audio(audio_path):
         command_output = decode_audio(enhanced_path)
         logger.info(f"🎯 Texto detectado: {command_output}")
         
+        command_output = set_command(str(command_output)).get('command')
+
+        
+        command_output = command_output.to_bytes(2, 'big')
+
         # Enviar el comando al dispositivo
         try:
             # Crear socket UDP para enviar el comando
             sock_comando = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             # Enviar el comando al dispositivo (ajusta IP y puerto según necesites)
-            sock_comando.sendto(str(command_output).encode(), ("192.168.1.64", 12345))
+            sock_comando.sendto(command_output, ("192.168.1.64", 12345))
             logger.info(f"📤 Comando enviado: {command_output}")
             sock_comando.close()
             
             # Ejecutar el comando localmente si es necesario
-            command_output = set_command(str(command_output))
+            
             
             # Eliminar el archivo procesado
             servidor_udp.eliminar_wav_antiguo()
