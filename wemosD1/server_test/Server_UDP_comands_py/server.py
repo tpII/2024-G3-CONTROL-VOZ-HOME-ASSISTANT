@@ -1,9 +1,9 @@
 import socket
 import time
+import numpy as np
 from datetime import datetime
 import sys
 import wave
-import numpy as np
 import threading
 import keyboard
 
@@ -14,7 +14,9 @@ class ServidorUDP:
             'UDP_IP': "0.0.0.0",
             'UDP_PORT': 12345,
             'SAMPLE_RATE': 15000,
-            'RECORDING_DURATION': 30  # segundos
+            'MAX_RECORDING_DURATION': 30,  # máximo 5 minutos por grabación
+            'SILENCE_DURATION': 2,  # 2 segundos de silencio para detener
+            'TRIGGER_SILENCE': 32   # umbral de variación para considerar silencio
         }
         
         # Variables de estado
@@ -22,6 +24,7 @@ class ServidorUDP:
         self.paused = False
         self.collected_data = []
         self.start_time = None
+        self.last_signal_time = None
         self.local_ips = socket.gethostbyname_ex(socket.gethostname())[2]
         
         # Control de dispositivos conectados
@@ -31,96 +34,68 @@ class ServidorUDP:
         # Inicializar socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.CONFIG['UDP_IP'], self.CONFIG['UDP_PORT']))
+        self.sock.settimeout(1.0)  # timeout para permitir verificaciones periódicas
         
     def print_header(self):
         """Muestra la información inicial del servidor"""
         print("\n" + "=" * 50)
-        print("💡 SERVIDOR UDP - MONITOREO DE DATOS 💡")
+        print("💡 SERVIDOR UDP - MONITOREO DE DATOS CON DETECCIÓN DE SILENCIO 💡")
         print("=" * 50 + "\n")
         print("📍 Escuchando en las siguientes IPs:")
         for ip in self.local_ips:
             print(f"📍 {ip}:{self.CONFIG['UDP_PORT']}")
         print(f"📡 Puerto de escucha: {self.CONFIG['UDP_PORT']}")
-        print("\nComandos disponibles (activos solo con dispositivos conectados):")
+        print(f"\n⚙️  Configuración de Silencio:")
+        print(f"   - Umbral de Silencio: ±{self.CONFIG['TRIGGER_SILENCE']}")
+        print(f"   - Duración de Silencio para Detener: {self.CONFIG['SILENCE_DURATION']} segundos")
+        print(f"   - Duración Máxima de Grabación: {self.CONFIG['MAX_RECORDING_DURATION']} segundos")
+        print("\nComandos disponibles:")
         print("'p' - Pausar/Reanudar grabación")
         print("'q' - Finalizar grabación actual y salir")
         print("'s' - Salir sin guardar")
-        print("'z' - Enviar comando 0x0501 (D5 alto)")
-        print("'x' - Enviar comando 0x0500 (D5 bajo)")
-        print("'c' - Enviar comando 0xFFFF (consultar estado)")
         print("\n" + "=" * 50 + "\n")
 
-    def actualizar_dispositivos(self, addr):
-        """Actualiza la lista de dispositivos conectados"""
-        self.dispositivos_conectados[addr] = time.time()
+    def verificar_silencio(self, datos):
+        """
+        Verifica si la señal está en estado de silencio
         
-    def limpiar_dispositivos_inactivos(self):
-        """Elimina dispositivos que no han enviado datos en el tiempo_timeout"""
-        tiempo_actual = time.time()
-        dispositivos_a_eliminar = []
+        Args:
+            datos (list): Lista de datos recibidos
         
-        for addr, ultimo_tiempo in self.dispositivos_conectados.items():
-            if tiempo_actual - ultimo_tiempo > self.tiempo_timeout:
-                dispositivos_a_eliminar.append(addr)
-                
-        for addr in dispositivos_a_eliminar:
-            del self.dispositivos_conectados[addr]
-            print(f"\n📴 Dispositivo desconectado: {addr}")
+        Returns:
+            bool: True si está en silencio, False en caso contrario
+        """
+        if not datos:
+            return True
+        
+        # Calcular valor promedio
+        promedio = np.mean(datos)
+        
+        # Verificar variación
+        variacion = np.max(np.abs(np.array(datos) - promedio))
+        
+        return variacion < self.CONFIG['TRIGGER_SILENCE']
 
-    def hay_dispositivos_conectados(self):
-        """Verifica si hay dispositivos conectados"""
-        self.limpiar_dispositivos_inactivos()
-        return len(self.dispositivos_conectados) > 0
-
-    def create_wav_file(self, filename):
-        """Crear archivo WAV a partir de los datos recolectados"""
+    def guardar_grabacion(self, filename=None):
+        """Guarda la grabación actual como archivo WAV"""
         if not self.collected_data:
             return
             
         normalized_data = np.array(self.collected_data, dtype=np.int16)
         normalized_data = ((normalized_data-512) * 64)
         
+        if filename is None:
+            filename = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+        
         with wave.open(filename, 'w') as wav_file:
             wav_file.setnchannels(1)
             wav_file.setsampwidth(2)
             wav_file.setframerate(self.CONFIG['SAMPLE_RATE'])
             wav_file.writeframes(normalized_data.tobytes())
-            
-    def enviar_comando(self, comando):
-        """Envía un comando a todos los dispositivos conectados"""
-        if not self.hay_dispositivos_conectados():
-            print("\n⚠️  No hay dispositivos conectados para enviar comandos")
-            return
-            
-        try:
-            cmd_bytes = comando.to_bytes(2, byteorder='big')
-            for addr in self.dispositivos_conectados.keys():
-                self.sock.sendto(cmd_bytes, addr)
-                print(f"\n📤 Comando 0x{comando:04X} enviado a {addr}")
-                
-            if comando == 0xFFFF:
-                # Esperar respuestas para el comando de estado
-                self.sock.settimeout(1.0)  # timeout de 1 segundo para respuestas
-                try:
-                    for _ in range(len(self.dispositivos_conectados)):
-                        data, addr = self.sock.recvfrom(16)
-                        self.procesar_estado_pines(data, addr)
-                except socket.timeout:
-                    print("⚠️  Algunos dispositivos no respondieron")
-                finally:
-                    self.sock.settimeout(None)
-                    
-        except Exception as e:
-            print(f"❌ Error al enviar comando: {e}")
-            
-    def procesar_estado_pines(self, data, addr):
-        """Procesa la respuesta del comando de estado de pines"""
-        print(f"\n📊 Estado de pines del dispositivo {addr}:")
-        for i in range(0, len(data), 2):
-            num_pin = data[i]
-            estado = data[i + 1]
-            print(f"  Pin {num_pin}: {'Alto' if estado else 'Bajo'}")
-            
+        
+        print(f"\n🎵 Archivo WAV guardado: {filename}")
+        self.collected_data = []  # Limpiar datos después de guardar
+
     def manejar_teclado(self):
         """Maneja los eventos de teclado"""
         while self.running:
@@ -140,70 +115,88 @@ class ServidorUDP:
                 print("\n🚫 Saliendo sin guardar...")
                 break
                 
-            elif keyboard.is_pressed('z'):
-                self.enviar_comando(0x0501)
-                time.sleep(0.2)
-                
-            elif keyboard.is_pressed('x'):
-                self.enviar_comando(0x0500)
-                time.sleep(0.2)
-                
-            elif keyboard.is_pressed('c'):
-                self.enviar_comando(0xFFFF)
-                time.sleep(0.2)
-                
-    def mostrar_progreso(self, elapsed_time):
-        """Muestra la barra de progreso de la grabación y dispositivos conectados"""
+            time.sleep(0.1)
+
+    def mostrar_progreso(self, elapsed_time, buffer_length):
+        """Muestra la barra de progreso de la grabación"""
         if not self.paused:
-            progress_bar = '[' + '=' * elapsed_time + ' ' * (self.CONFIG['RECORDING_DURATION'] - elapsed_time) + ']'
-            dispositivos = len(self.dispositivos_conectados)
-            sys.stdout.write(f"⏳ Grabando {progress_bar} {elapsed_time}s/{self.CONFIG['RECORDING_DURATION']}s 📱 {dispositivos} dispositivo{'s' if dispositivos != 1 else ''}\r")
+            progress_bar = '[' + '=' * min(elapsed_time, 50) + ' ' * max(50 - elapsed_time, 0) + ']'
+            sys.stdout.write(f"⏳ Grabando {progress_bar} {elapsed_time}s | Buffer: {buffer_length} muestras\r")
             sys.stdout.flush()
-            
+
     def iniciar(self):
         """Inicia el servidor y la grabación"""
         self.print_header()
         self.running = True
-        self.start_time = time.time()
         
         # Iniciar thread para manejo de teclado
         keyboard_thread = threading.Thread(target=self.manejar_teclado)
+        keyboard_thread.daemon = True
         keyboard_thread.start()
+        
+        buffer_actual = []
+        inicio_grabacion = time.time()
+        ultima_grabacion = time.time()
         
         try:
             while self.running:
                 if not self.paused:
-                    # Recibir datos
-                    data, addr = self.sock.recvfrom(1024*2+4)
-                    
-                    # Actualizar lista de dispositivos conectados
-                    self.actualizar_dispositivos(addr)
-                    
-                    # Procesar datos recibidos
-                    received_data = [int.from_bytes(data[i:i+2], 'little') 
-                                   for i in range(0, len(data) - 2, 2)]
-                    self.collected_data.extend(received_data)
-                    
-                    # Verificar tiempo transcurrido
-                    elapsed_time = int(time.time() - self.start_time)
-                    self.mostrar_progreso(elapsed_time)
-                    
-                    # Verificar si se completó el tiempo de grabación
-                    if elapsed_time >= self.CONFIG['RECORDING_DURATION']:
-                        file_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        wav_filename = f"audio_{file_timestamp}.wav"
+                    try:
+                        data, _ = self.sock.recvfrom(1024*2+4)
                         
-                        self.create_wav_file(wav_filename)
-                        print(f"\n🎵 Archivo WAV guardado: {wav_filename}")
+                        # Procesar datos recibidos
+                        received_data = [int.from_bytes(data[i:i+2], 'little') 
+                                       for i in range(0, len(data) - 2, 2)]
                         
-                        # Reiniciar para nueva grabación
-                        self.collected_data = []
-                        self.start_time = time.time()
-                
+                        buffer_actual.extend(received_data)
+                        self.collected_data.extend(received_data)
+                        
+                        # Calcular tiempo transcurrido
+                        tiempo_actual = time.time()
+                        tiempo_transcurrido = int(tiempo_actual - inicio_grabacion)
+                        
+                        # Verificar condiciones de detención
+                        if self.verificar_silencio(buffer_actual[-50:]):  # Verificar últimas 50 muestras
+                            if tiempo_actual - ultima_grabacion > self.CONFIG['SILENCE_DURATION']:
+                                print("\n🔇 Silencio detectado. Guardando grabación...")
+                                self.guardar_grabacion()
+                                buffer_actual = []
+                                inicio_grabacion = tiempo_actual
+                                ultima_grabacion = tiempo_actual
+                        else:
+                            ultima_grabacion = tiempo_actual
+                        
+                        # Reset buffer si es muy largo
+                        buffer_actual = buffer_actual[-1000:]
+                        
+                        # Verificar tiempo máximo de grabación
+                        if tiempo_transcurrido >= self.CONFIG['MAX_RECORDING_DURATION']:
+                            print("\n⏰ Tiempo máximo de grabación alcanzado.")
+                            self.guardar_grabacion()
+                            buffer_actual = []
+                            inicio_grabacion = tiempo_actual
+                        
+                        # Mostrar progreso
+                        self.mostrar_progreso(tiempo_transcurrido, len(self.collected_data))
+                        
+                    except socket.timeout:
+                        # Verificar silencio por timeout de socket
+                        if time.time() - ultima_grabacion > self.CONFIG['SILENCE_DURATION']:
+                            if self.collected_data:
+                                print("\n📴 Sin señal. Guardando grabación...")
+                                self.guardar_grabacion()
+                                buffer_actual = []
+                                inicio_grabacion = time.time()
+                                ultima_grabacion = time.time()
+                    
         except KeyboardInterrupt:
             print("\n🚨 Servidor detenido manualmente.")
             
         finally:
+            # Guardar última grabación si hay datos
+            if self.collected_data:
+                self.guardar_grabacion()
+            
             self.running = False
             keyboard_thread.join()
             self.sock.close()
