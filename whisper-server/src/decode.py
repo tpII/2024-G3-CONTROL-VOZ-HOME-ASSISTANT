@@ -6,11 +6,11 @@ from utils import get_audio_metadata, array_to_wav
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-# Configurar logging
+# Configurar logging para stdout
 logging.basicConfig(
-    filename='./log/decode.log',
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 

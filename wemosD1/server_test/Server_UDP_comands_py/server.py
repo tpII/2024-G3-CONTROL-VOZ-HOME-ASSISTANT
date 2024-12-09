@@ -78,23 +78,25 @@ class ServidorUDP:
 
     def guardar_grabacion(self, filename=None):
         """Guarda la grabación actual como archivo WAV"""
-        if not self.collected_data:
-            return
+        try:
+            import soundfile as sf  # Agregar al inicio del archivo: pip install soundfile
             
-        normalized_data = np.array(self.collected_data, dtype=np.int16)
-        normalized_data = ((normalized_data-512) * 64)
-        
-        if filename is None:
-            filename = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
-        
-        with wave.open(filename, 'w') as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(self.CONFIG['SAMPLE_RATE'])
-            wav_file.writeframes(normalized_data.tobytes())
-        
-        print(f"\n🎵 Archivo WAV guardado: {filename}")
-        self.collected_data = []  # Limpiar datos después de guardar
+            if not self.collected_data:
+                return
+            
+            normalized_data = np.array(self.collected_data, dtype=np.int16)
+            normalized_data = ((normalized_data-512) * 64)
+            
+            if filename is None:
+                filename = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+            
+            sf.write(filename, normalized_data, self.CONFIG['SAMPLE_RATE'])
+            
+            print(f"\n🎵 Archivo WAV guardado: {filename}")
+            self.collected_data = []
+            
+        except Exception as e:
+            print(f"Error al guardar el archivo WAV: {e}")
 
     def manejar_teclado(self):
         """Maneja los eventos de teclado"""
