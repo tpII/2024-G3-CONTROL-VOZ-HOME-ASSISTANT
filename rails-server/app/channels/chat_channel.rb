@@ -28,6 +28,16 @@ class ChatChannel < ApplicationCable::Channel
     end
   end
 
+  def update_led_state(data)
+    Rails.cache.write('led_state', data['state'])
+    transmit({ message: 'Estado del LED actualizado en memoria' })
+  end
+
+  def led_state
+    current_state = Rails.cache.fetch('led_state')
+    transmit({ message: current_state })
+  end
+
   private
 
   def send_udp_command(command)
