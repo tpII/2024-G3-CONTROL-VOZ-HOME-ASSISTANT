@@ -26,7 +26,7 @@ def butter_highpass(cutoff, fs, order=5):
 
 def enhance_audio(audio, sr):
     """
-    Mejora el audio optimizando para la palabra 'Alexa'
+    Mejora el audio optimizando para la palabra 'Prender y Apagar'
     """
     enhancement_config = {
         "stft": {
@@ -88,16 +88,16 @@ def enhance_audio(audio, sr):
 
 def decode_audio(audio_path):
     """
-    Decodifica el audio optimizado para detectar la palabra 'Alexa'
+    Decodifica el audio optimizado para detectar la palabra 'Prender y Apagar'
     """
     try:
         # Cargar modelo
         model = whisper.load_model("base")
         
-        # Configurar opciones específicas para detectar "Alexa"
+        # Configurar opciones específicas para detectar "'Prender y Apagar'"
         options = {
             "language": "es",
-            "initial_prompt": "El audio contiene la palabra Alexa. Alexa es una palabra clave.",
+            "initial_prompt": "El audio contiene la palabras 'Prender y Apagar'. 'Prender y Apagar' son palabras clave.",
             "temperature": 0,  # Reducir variabilidad
             "best_of": 5,     # Aumentar intentos de decodificación
             "beam_size": 5,   # Aumentar búsqueda de beam
