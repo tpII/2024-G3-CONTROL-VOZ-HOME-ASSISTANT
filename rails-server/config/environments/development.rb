@@ -71,7 +71,7 @@ Rails.application.configure do
   config.action_cable.disable_request_forgery_protection = true
 
   config.action_cable.allowed_request_origins = [%r{http://*}, %r{https://*}, %r{file://*}, 'file://',
-                                                 'http://localhost:8080', 'http://127.0.0.1:8080', nil,
+                                                 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://webserver:8080', nil,
                                                  'ws://localhost:8080', 'ws://127.0.0.1:8080', 'ws://websocket:8080',
                                                  'ws://webserver:8080', "#{WHISPER_URL}:#{WHISPER_PORT}"]
   config.hosts << 'webserver'
