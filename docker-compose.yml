@@ -11,14 +11,14 @@ services:
       context: ./dashboard-pwa
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: "http://webserver:8080"
-        NEXT_PUBLIC_BACKEND_WEBSOCKET_URL: "ws://webserver:8080"
+        NEXT_PUBLIC_BACKEND_URL: "http://localhost:8080"
+        NEXT_PUBLIC_BACKEND_WEBSOCKET_URL: "ws://localhost:8080"
     container_name: frontend-dashboard
     ports:
       - "3000:3000" # Puerto mapeado
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://webserver:8080
-      - NEXT_PUBLIC_BACKEND_WEBSOCKET_URL=ws://webserver:8080
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+      - NEXT_PUBLIC_BACKEND_WEBSOCKET_URL=ws://localhost:8080
 
   # Servicio de la aplicación web (ej. una app en Ruby)
   webserver:
