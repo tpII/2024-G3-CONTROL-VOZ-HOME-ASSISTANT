@@ -22,17 +22,21 @@ app = Flask(__name__)
 
 def process_audio(audio_path):
     """
-    Procesa un archivo de audio y ejecuta el comando correspondiente
+    Procesa un archivo de audio corto y ejecuta el comando correspondiente
     """
     try:
         # Cargar y mejorar el audio
         metadata = get_audio_metadata(audio_path)
         sr = metadata["sample_rate"] if metadata else 16000
         
-        # Cargar el audio
-        audio, _ = librosa.load(audio_path, sr=sr, mono=True)
+        # Cargar el audio limitando a 3 segundos
+        audio, _ = librosa.load(
+            audio_path, 
+            sr=sr, 
+            mono=True
+        )
         
-        # Aplicar mejoras
+        # Aplicar mejoras optimizadas para clips cortos
         enhance_audio(audio, sr)
         enhanced_path = './audio/enhanced_audio.wav'
         
@@ -40,17 +44,20 @@ def process_audio(audio_path):
         command_output = decode_audio(enhanced_path)
         logger.info(f"🎯 Texto detectado: {command_output}")
         
-        # Enviar el comando al dispositivo
+        
+        # Solo procesamos comandos válidos
+        hex_command = set_command(str(command_output))['command']
         try:
             # Crear socket UDP para enviar el comando
             sock_comando = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # Enviar el comando al dispositivo (ajusta IP y puerto según necesites)
-            sock_comando.sendto(str(command_output).encode(), ("192.168.1.64", 12345))
-            logger.info(f"📤 Comando enviado: {command_output}")
-            sock_comando.close()
             
-            # Ejecutar el comando localmente si es necesario
-            command_output = set_command(str(command_output))
+            # Convertir el comando hexadecimal a bytes (2 bytes, big endian)
+            command_bytes = hex_command.to_bytes(2, byteorder='big')
+            
+            # Enviar el comando
+            sock_comando.sendto(command_bytes, ("192.168.1.65", 12345))
+            logger.info(f"📤 Comando hexadecimal enviado: 0x{hex_command:04X}")
+            sock_comando.close()
             
             # Eliminar el archivo procesado
             servidor_udp.eliminar_wav_antiguo()
@@ -58,7 +65,8 @@ def process_audio(audio_path):
             return {
                 "texto": command_output,
                 "comando_enviado": True,
-                "resultado_local": command_output
+                "comando_hex": f"0x{hex_command:04X}",
+                "status": "success"
             }
             
         except Exception as e:
@@ -67,13 +75,18 @@ def process_audio(audio_path):
             return {
                 "texto": command_output,
                 "comando_enviado": False,
-                "error": error_msg
+                "comando_hex": f"0x{hex_command:04X}",
+                "error": error_msg,
+                "status": "error"
             }
         
     except Exception as e:
         error_msg = f"❌ Error procesando audio {audio_path}: {str(e)}"
         logger.error(error_msg)
-        return {"error": error_msg}
+        return {
+            "error": error_msg,
+            "status": "error"
+        }
 
 def process_audio_loop():
     """
@@ -111,7 +124,7 @@ def garbage_collector():
     Thread dedicado a limpiar archivos de audio antiguos
     """
     DIRECTORIOS = ['./audio', './udp_audios']
-    MAX_EDAD_ARCHIVO = 300  # 5 minutos en segundos
+    MAX_EDAD_ARCHIVO = 3000  # 5 minutos en segundos
     
     while True:
         try:
@@ -134,7 +147,7 @@ def garbage_collector():
                     # Eliminar si es muy antiguo
                     if edad_archivo > MAX_EDAD_ARCHIVO:
                         try:
-                            os.remove(ruta_archivo)
+                            #os.remove(ruta_archivo)
                             logging.info(f"🗑️ GC: Archivo eliminado por antigüedad: {ruta_archivo}")
                         except Exception as e:
                             logging.error(f"❌ GC: Error eliminando archivo {ruta_archivo}: {str(e)}")
@@ -165,9 +178,9 @@ def iniciar_servidor():
     process_thread.start()
     
     # Iniciar garbage collector
-    gc_thread = threading.Thread(target=garbage_collector)
-    gc_thread.daemon = True
-    gc_thread.start()
+    #gc_thread = threading.Thread(target=garbage_collector)
+    #gc_thread.daemon = True
+    #gc_thread.start()
     
     logging.info("🚀 Servidor iniciado y procesando")
 
