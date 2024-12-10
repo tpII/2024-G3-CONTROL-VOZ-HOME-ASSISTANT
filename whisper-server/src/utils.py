@@ -18,7 +18,6 @@ def get_audio_metadata(audio_path):
                 "duration": float(audio_file.frames) / float(audio_file.samplerate),
                 "seekable": audio_file.seekable()
             }
-            logger.info(f"Metadatos obtenidos: {metadata}")
             return metadata
     except Exception as e:
         logger.error(f"Error obteniendo metadatos: {str(e)}")
