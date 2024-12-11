@@ -1,6 +1,7 @@
 import whisper
 import librosa
 import logging
+from scipy.signal import resample, butter, lfilter
 import os
 from utils import get_audio_metadata, array_to_wav
 import numpy as np
@@ -17,26 +18,36 @@ logger = logging.getLogger(__name__)
 # Cargar el modelo una sola vez como variable global
 
 
-def butter_highpass(cutoff, fs, order=5):
-    """Diseña un filtro pasa alto Butterworth"""
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
+def resample_audio(audio_data, original_rate, target_rate):
+    """Resample the audio to a higher frequency."""
+    num_samples = int(len(audio_data) * (target_rate / original_rate))
+    return resample(audio_data, num_samples)
+
+def apply_highpass_filter(audio_data, cutoff_freq, sample_rate):
+    """Apply a high-pass filter to remove low frequencies."""
+    nyquist = sample_rate / 2
+    normal_cutoff = cutoff_freq / nyquist
+    b, a = butter(5, normal_cutoff, btype='high', analog=False)
+    return lfilter(b, a, audio_data)
+    
 
 def enhance_audio(audio, sr):
     """
     Mejora el audio optimizando para la palabra 'Prender y Apagar'
     """
     enhancement_config = {
-        "stft": {
-            "n_fft": 1024,            # Ventana más pequeña para mejor resolución temporal
-            "hop_length": 256,        
-            "noise_reduction_factor": 2.0  # Más agresivo con el ruido
+        "resample": {
+            "original_frame": 12000,            # Ventana más pequeña para mejor resolución temporal
+            "target_rate": 14000,        
+            "noise_reduction_factor": 3.0  # Más agresivo con el ruido
         },
         "highpass": {
-            "cutoff": 200,           # Reducido para capturar mejor frecuencias vocales
-            "order": 4               
+            "cutoff": 100,           # Reducido para capturar mejor frecuencias vocales
+            "target_rate": 14000,              
+        },
+        "butter": {
+            "cutoff": 300,
+            "fs": 10000
         },
         "duration": 4.0
     }
@@ -45,39 +56,15 @@ def enhance_audio(audio, sr):
         # Asegurar que el audio esté en float32
         audio = audio.astype(np.float32)
         
-        # 1. Normalización inicial
-        audio = librosa.util.normalize(audio)
-        
-        # 2. Reducción de ruido usando STFT
-        D = librosa.stft(
-            audio, 
-            n_fft=enhancement_config["stft"]["n_fft"],
-            hop_length=enhancement_config["stft"]["hop_length"]
-        )
-        D_mag, D_phase = librosa.magphase(D)
-        
-        # Calcular y aplicar umbral de ruido
-        noise_thresh = np.median(np.abs(D_mag)) * enhancement_config["stft"]["noise_reduction_factor"]
-        D_mag = np.maximum(0, np.abs(D_mag) - noise_thresh)
-        
-        # Reconstruir señal
-        D = D_mag * D_phase
-        audio_denoised = librosa.istft(
-            D, 
-            hop_length=enhancement_config["stft"]["hop_length"]
-        )
-        
-        # 3. Filtro pasa alto para eliminar ruidos de baja frecuencia
-        b, a = butter_highpass(
-            cutoff=enhancement_config["highpass"]["cutoff"],
-            fs=sr,
-            order=enhancement_config["highpass"]["order"]
-        )
-        audio_filtered = filtfilt(b, a, audio_denoised)
-        
+        resampled_audio = resample_audio(audio, enhancement_config["resample"]["original_frame"], enhancement_config["resample"]["target_rate"])
+
+        filtered_audio = apply_highpass_filter(resampled_audio, enhancement_config["highpass"]["cutoff"], enhancement_config["highpass"]["target_rate"])
+
+        normalized_audio = np.int16(butterd_audio / np.max(np.abs(filtered_audio)) * 32767)
+
         # 4. Guardar el audio mejorado
         array_to_wav(
-            audio_filtered.astype(np.float32),
+            normalized_audio.astype(np.float32),
             './audio/enhanced_audio.wav',
             sr
         )

@@ -159,7 +159,12 @@ def iniciar_servidor():
     os.makedirs('./udp_audios', exist_ok=True)
     
     # Iniciar servidor UDP
-    servidor_udp = ServidorUDP()
+    server_udp_config = {
+        "host": "192.168.1.68",
+        "port": 12345
+    }
+
+    servidor_udp = ServidorUDP(**server_udp_config)
     udp_thread = threading.Thread(target=servidor_udp.udp_listener)
     udp_thread.daemon = True
     udp_thread.start()
