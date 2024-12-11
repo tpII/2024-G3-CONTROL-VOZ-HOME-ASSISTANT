@@ -11,7 +11,7 @@ export default function Component() {
   const isLightOn = ledState === "ON";
 
   const toggleLight = () => {
-    sendMessage(isLightOn ? "TURN_OFF" : "TURN_ON");
+    sendMessage(isLightOn ? "OFF" : "ON");
   };
 
   return (
