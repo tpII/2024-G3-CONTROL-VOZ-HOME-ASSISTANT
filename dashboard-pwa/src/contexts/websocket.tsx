@@ -88,7 +88,7 @@ export function WebSocketProvider({
             room: "udp",
           }),
           data: JSON.stringify({
-            action: "update_led_state",
+            action: "receive",
             message,
           }),
         })
