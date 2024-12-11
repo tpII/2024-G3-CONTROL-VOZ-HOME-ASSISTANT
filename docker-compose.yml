@@ -35,10 +35,10 @@ services:
     stdin_open: true
     tty: true
     environment:
-      - WEMOS_IP=192.168.1.70
+      - WEMOS_IP=192.168.1.64
       - WEMOS_PORT=4040
-      - WHISPER_PORT=8083
-      - WHISPER_URL=http://whisper
+      - WHISPER_PORT=8082
+      - WHISPER_URL=http://whisper:8082
       - UDP_SERVER_HOST=udp-server
       - UDP_SERVER_PORT=12345
 
@@ -57,7 +57,7 @@ services:
       - WEBSERVER_URL=http://webserver:8080
       - WEBSOCKET_URL=ws://webserver:8080
       - WEBSOCKET_PORT=8080
-      - WEMOS_IP=192.168.1.70
+      - WEMOS_IP=192.168.1.64
       - WEMOS_PORT=4040
 
   whisper:
@@ -71,5 +71,5 @@ services:
       - WEBSERVER_URL=http://webserver:8080
       - WEBSOCKET_URL=ws://webserver:8080
       - WEBSOCKET_PORT=8080
-      - WEMOS_IP=192.168.1.70
+      - WEMOS_IP=192.168.1.64
       - WEMOS_PORT=4040

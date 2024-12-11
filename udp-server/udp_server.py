@@ -8,17 +8,14 @@ import os
 # Constantes para el webserver
 API_URL = os.getenv("WEBSERVER_URL", "http://webserver")
 WEBSOCKET_URL = os.getenv("WEBSOCKET_URL", "ws://webserver")
-WEBSOCKET_PORT = os.getenv("WEBSOCKET_PORT", 8080)
+WEBSOCKET_PORT = int(os.getenv("WEBSOCKET_PORT", 8080))
 REGISTER_ENDPOINT = "/auth"
 LOGIN_ENDPOINT = "/auth/sign_in"
 WEBSOCKET_URI = "/cable"
 
-# Mapea las acciones recibidas a los mensajes UDP para la Wemos D1
-ACTION_TO_UDP = {"turn_on": {"word": "C_connect"}, "turn_off": {"word": "C_disconnect"}}
-
 # Constantes para la Wemos
 WEMOS_IP = os.getenv("WEMOS_IP", "192.168.1.70")
-WEMOS_PORT = os.getenv("WEMOS_PORT", 4040)
+WEMOS_PORT = int(os.getenv("WEMOS_PORT", 4040))
 
 # Constantes para UDP
 UDP_PORT = 12345
@@ -90,6 +87,7 @@ def send_udp_message_to_wemos(message):
   udp_socket.close()
   log(f"Mensaje UDP enviado a Wemos: {message}")
 
+
 # Inicia el servidor UDP y reenvía mensajes al WebSocket
 
 
@@ -102,24 +100,13 @@ def start_udp_server(auth_tokens):
   log(f"Servidor UDP escuchando en el puerto {UDP_PORT}...")
 
   while True:
-    # Recibe mensaje UDP
     message, sender = udp_socket.recvfrom(65507)
     sender_ip, sender_port = sender
-
     message = message.decode().strip()
     log(f"Mensaje recibido: '{message}' de {sender_ip}:{sender_port}")
 
-    # Procesar acción y enviar a Wemos si aplica
-    action = json.loads(message).get("action")
-    if action in ACTION_TO_UDP:
-      udp_message = json.dumps(ACTION_TO_UDP[action])
-      send_udp_message_to_wemos(udp_message)
-
-    # Reenvía el mensaje al WebSocket
-    payload = json.dumps(
-        {"message": message, "ip": sender_ip, "port": sender_port})
-    ws.send(payload)
-    log(f"Mensaje enviado al WebSocket: {payload}")
+    # Envía directamente el mensaje a la Wemos
+    send_udp_message_to_wemos(message)
 
 
 if __name__ == "__main__":
