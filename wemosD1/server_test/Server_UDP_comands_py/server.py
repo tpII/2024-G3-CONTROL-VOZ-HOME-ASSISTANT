@@ -13,9 +13,9 @@ class ServidorUDP:
         self.CONFIG = {
             'UDP_IP': "0.0.0.0",
             'UDP_PORT': 12345,
-            'SAMPLE_RATE': 15000,
-            'MAX_RECORDING_DURATION': 30,  # máximo 5 minutos por grabación
-            'SILENCE_DURATION': 2,  # 2 segundos de silencio para detener
+            'SAMPLE_RATE': 10000,
+            'MAX_RECORDING_DURATION': 30,  # máximo 30 segundos por grabación
+            'SILENCE_DURATION': 1,  # 1 segundos de silencio para separar las grabaciones
             'TRIGGER_SILENCE': 32   # umbral de variación para considerar silencio
         }
         
