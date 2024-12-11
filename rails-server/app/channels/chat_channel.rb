@@ -11,7 +11,7 @@ class ChatChannel < ApplicationCable::Channel
     stream_for 'chat_channel'
 
     current_state = Rails.cache.fetch('led_state', default: 'OFF')
-    transmit({ message: current_state })
+    transmit(current_state)
   end
 
   def receive(data)
@@ -22,7 +22,7 @@ class ChatChannel < ApplicationCable::Channel
       Rails.cache.write('led_state', message)
       Rails.logger.info "Enviando #{command} a la Wemos"
       send_udp_command(command) # Envía el comando directamente al servidor UDP
-      ActionCable.server.broadcast('chat_channel', { message: message }) # Notifica a todos los clientes
+      ActionCable.server.broadcast('chat_channel', message) # Notifica a todos los clientes
     else
       Rails.logger.error "Comando inválido: #{message}"
     end
@@ -30,12 +30,12 @@ class ChatChannel < ApplicationCable::Channel
 
   def update_led_state(data)
     Rails.cache.write('led_state', data['state'])
-    transmit({ message: 'Estado del LED actualizado en memoria' })
+    transmit('Estado del LED actualizado en memoria')
   end
 
   def led_state
     current_state = Rails.cache.fetch('led_state')
-    transmit({ message: current_state })
+    transmit(current_state)
   end
 
   private
