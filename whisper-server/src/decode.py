@@ -31,6 +31,72 @@ def apply_highpass_filter(audio_data, cutoff_freq, sample_rate):
     return lfilter(b, a, audio_data)
     
 
+
+def pre_enhance_audio(audio, sr):
+    """
+    Mejora el audio optimizando para las palabras 'prender' y 'apagar'
+    """
+    enhancement_config = {
+        "stft": {
+            "n_fft": 256,             # Ventana más grande para mejor frecuencia
+            "hop_length": 128,        # Hop length ajustado
+            "noise_reduction_factor": 3  # Menos agresivo con el ruido
+        },
+        "highpass": {
+            "cutoff": 300,           # Frecuencia de corte más baja
+            "order": 3               # Orden más bajo para menos distorsión
+        },
+        "duration": 10.0            # Duración máxima más larga
+    }
+    
+    try:
+        # Asegurar que el audio no exceda 3 segundos
+        max_samples = int(sr * enhancement_config["duration"])
+        if len(audio) > max_samples:
+            audio = audio[:max_samples]
+        
+        # Normalización y preprocesamiento
+        audio = audio.astype(np.float32)
+        audio = librosa.util.normalize(audio)
+        
+        # Aplicar filtro pasa alto
+        b, a = butter_highpass(
+            cutoff=enhancement_config["highpass"]["cutoff"],
+            fs=sr,
+            order=enhancement_config["highpass"]["order"]
+        )
+        audio_filtered = filtfilt(b, a, audio)
+        
+        # Procesamiento STFT con ventanas más pequeñas
+        D = librosa.stft(
+            audio_filtered, 
+            n_fft=enhancement_config["stft"]["n_fft"],
+            hop_length=enhancement_config["stft"]["hop_length"]
+        )
+        D_mag, D_phase = librosa.magphase(D)
+        
+        # Reducción de ruido suave
+        noise_thresh = np.median(np.abs(D_mag)) * enhancement_config["stft"]["noise_reduction_factor"]
+        D_mag = np.maximum(0, np.abs(D_mag) - noise_thresh)
+        
+        # Reconstrucción
+        D = D_mag * D_phase
+        audio_enhanced = librosa.istft(
+            D, 
+            hop_length=enhancement_config["stft"]["hop_length"]
+        )
+        
+        # Guardar el audio mejorado
+        array_to_wav(
+            audio_enhanced.astype(np.float32),
+            './audio/enhanced_audio.wav',
+            sr
+        )
+        logger.info("Audio mejorado guardado en ./audio/enhanced_audio.wav")
+        
+    except Exception as e:
+        logger.error(f"Error en mejora de audio: {e}")
+
 def enhance_audio(audio, sr):
     """
     Mejora el audio optimizando para la palabra 'Prender y Apagar'
