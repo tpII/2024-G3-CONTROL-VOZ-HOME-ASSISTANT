@@ -58,18 +58,17 @@ services:
       - WEBSOCKET_URL=ws://webserver:8080
       - WEBSOCKET_PORT=8080
       - WEMOS_IP=192.168.1.65
-      - WEMOS_PORT=12345
+      - WEMOS_PORT=4444
 
-  whisper:
-    build: ./whisper-server
-    container_name: whisper-service
-    ports:
-      - "8082:8082"
-    networks:
-      - app-network
-    environment:
-      - WEBSERVER_URL=http://webserver:8080
-      - WEBSOCKET_URL=ws://webserver:8080
-      - WEBSOCKET_PORT=8080
-      - WEMOS_IP=192.168.1.64
-      - WEMOS_PORT=4040
+#  whisper:
+#    build: ./whisper-server
+#    container_name: whisper-service
+#    ports:
+#      - "8082:8082"
+#    networks:
+#      - app-network
+#    environment:
+#      - WHISPER_IP=192.168.1.67
+#      - WHISPER_PORT=8082
+#      - WEMOS_IP=192.168.1.65
+#      - WEMOS_PORT=4444

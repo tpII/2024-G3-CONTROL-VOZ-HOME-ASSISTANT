@@ -15,7 +15,7 @@ WEBSOCKET_URI = "/cable"
 
 # Constantes para la Wemos
 WEMOS_IP = os.getenv("WEMOS_IP", "192.168.1.65")
-WEMOS_PORT = int(os.getenv("WEMOS_PORT", 44444))
+WEMOS_PORT = int(os.getenv("WEMOS_PORT", 4444))
 
 # Constantes para UDP
 UDP_PORT = 12345

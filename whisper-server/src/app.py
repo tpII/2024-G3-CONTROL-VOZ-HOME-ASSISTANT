@@ -20,6 +20,42 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+
+def iniciar_servidor():
+    global servidor_udp
+    
+    # Crear directorios si no existen
+    os.makedirs('./audio', exist_ok=True)
+    os.makedirs('./udp_audios', exist_ok=True)
+    
+    WHISPER_IP          = os.getenv("WHISPER_IP", "192.168.1.67")
+    WHISPER_PORT        = os.getenv("WHISPER_PORT", 8082)
+    WEMOS_IP            = os.getenv("WEMOS_IP", "192.168.1.65")
+    WEMOS_PORT          = os.getenv("WEMOS_PORT", 4444)
+    # Iniciar servidor UDP
+    server_udp_config = {
+        "host": str(WHISPER_IP),
+        "port": int(WEMOS_PORT)
+    }
+
+    servidor_udp = ServidorUDP(**server_udp_config)
+    udp_thread = threading.Thread(target=servidor_udp.udp_listener)
+    udp_thread.daemon = True
+    udp_thread.start()
+    
+    # Iniciar procesamiento de audio
+    process_thread = threading.Thread(target=process_audio_loop)
+    process_thread.daemon = True
+    process_thread.start()
+    
+    # Iniciar garbage collector
+    #gc_thread = threading.Thread(target=garbage_collector)
+    #gc_thread.daemon = True
+    #gc_thread.start()
+    
+    logging.info("🚀 Servidor iniciado y procesando")
+    
+
 def process_audio(audio_path):
     """
     Procesa un archivo de audio corto y ejecuta el comando correspondiente
@@ -41,22 +77,25 @@ def process_audio(audio_path):
         enhanced_path = './audio/enhanced_audio.wav'
         
         # Procesar el audio mejorado y obtener el texto
-        command_output = decode_audio(enhanced_path)
-        logger.info(f"🎯 Texto detectado: {command_output}")
+        decoded_audio = decode_audio(enhanced_path)
+        logger.info(f"🎯 Texto detectado: {decoded_audio}")
         
-        command_output = set_command(str(command_output)).get('command')
+        command_output = set_command(str(decoded_audio)).get('command')
 
-        
-        command_output = command_output.to_bytes(2, 'big')
+
+        datos = bytes.fromhex(command_output)
+
 
         # Enviar el comando al dispositivo
         try:
-            # Crear socket UDP para enviar el comando
-            sock_comando = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # Enviar el comando al dispositivo (ajusta IP y puerto según necesites)
-            sock_comando.sendto(command_output, ("192.168.1.64", 12345))
-            logger.info(f"📤 Comando enviado: {command_output}")
-            sock_comando.close()
+            
+            # Crear socket UDP
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            
+            # Enviar datos
+            sock.sendto(datos, ("192.168.1.65", 4444))
+            logger.info(f"📤 Comando enviado: {datos}")
+            sock.close()
             
             # Ejecutar el comando localmente si es necesario
             
@@ -67,7 +106,7 @@ def process_audio(audio_path):
             return {
                 "texto": command_output,
                 "comando_enviado": True,
-                "comando_hex": f"0x{hex_command:04X}",
+                "comando_hex": f"0x{command_output}",
                 "status": "success"
             }
             
@@ -77,7 +116,7 @@ def process_audio(audio_path):
             return {
                 "texto": command_output,
                 "comando_enviado": False,
-                "comando_hex": f"0x{hex_command:04X}",
+                "comando_hex": f"0x{command_output}",
                 "error": error_msg,
                 "status": "error"
             }
@@ -161,36 +200,7 @@ def garbage_collector():
             logging.error(f"❌ Error en garbage collector: {str(e)}")
             time.sleep(60)
 
-def iniciar_servidor():
-    global servidor_udp
-    
-    # Crear directorios si no existen
-    os.makedirs('./audio', exist_ok=True)
-    os.makedirs('./udp_audios', exist_ok=True)
-    
-    # Iniciar servidor UDP
-    server_udp_config = {
-        "host": "192.168.1.68",
-        "port": 12345
-    }
-
-    servidor_udp = ServidorUDP(**server_udp_config)
-    udp_thread = threading.Thread(target=servidor_udp.udp_listener)
-    udp_thread.daemon = True
-    udp_thread.start()
-    
-    # Iniciar procesamiento de audio
-    process_thread = threading.Thread(target=process_audio_loop)
-    process_thread.daemon = True
-    process_thread.start()
-    
-    # Iniciar garbage collector
-    #gc_thread = threading.Thread(target=garbage_collector)
-    #gc_thread.daemon = True
-    #gc_thread.start()
-    
-    logging.info("🚀 Servidor iniciado y procesando")
 
 if __name__ == '__main__':
     iniciar_servidor()
-    app.run(host="localhost", port=8082)
+    app.run(host="0.0.0.0", port=8082)

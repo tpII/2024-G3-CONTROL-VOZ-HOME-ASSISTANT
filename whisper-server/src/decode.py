@@ -110,13 +110,19 @@ def enhance_audio(audio, sr):
     """
     enhancement_config = {
         "resample": {
-            "original_frame": 12000,            # Ventana más pequeña para mejor resolución temporal
-            "target_rate": 14000,        
-            "noise_reduction_factor": 3.0  # Más agresivo con el ruido
+            "original_frame": 8000,            # Ventana más pequeña para mejor resolución temporal
+            "target_rate": 9000,        
+            "noise_reduction_factor": 10.0  # Más agresivo con el ruido
         },
         "highpass": {
-            "cutoff": 100,           # Reducido para capturar mejor frecuencias vocales
-            "target_rate": 14000,              
+            "cutoff": 300,           # Reducido para capturar mejor frecuencias vocales
+            "target_rate": 9000,              
+        },
+        "stft": {
+            "n_fft": 256,
+            "hop_length": 128,
+            "noise_reduction_factor": 3
+
         },
         "butter": {
             "cutoff": 300,
@@ -131,15 +137,34 @@ def enhance_audio(audio, sr):
         if len(audio) > max_samples:
             audio = audio[:max_samples]
         
-        resampled_audio = resample_audio(audio, enhancement_config["resample"]["original_frame"], enhancement_config["resample"]["target_rate"])
 
-        filtered_audio = apply_highpass_filter(resampled_audio, enhancement_config["highpass"]["cutoff"], enhancement_config["highpass"]["target_rate"])
-
-        normalized_audio = np.int16(butterd_audio / np.max(np.abs(filtered_audio)) * 32767)
+        # Normalización y preprocesamiento
+        audio = audio.astype(np.float32)
+        audio = librosa.util.normalize(audio)
+        
+        
+        # Procesamiento STFT con ventanas más pequeñas
+        D = librosa.stft(
+            audio, 
+            n_fft=enhancement_config["stft"]["n_fft"],
+            hop_length=enhancement_config["stft"]["hop_length"]
+        )
+        D_mag, D_phase = librosa.magphase(D)
+        
+        # Reducción de ruido suave
+        noise_thresh = np.median(np.abs(D_mag)) * enhancement_config["stft"]["noise_reduction_factor"]
+        D_mag = np.maximum(0, np.abs(D_mag) - noise_thresh)
+        
+        # Reconstrucción
+        D = D_mag * D_phase
+        audio_enhanced = librosa.istft(
+            D, 
+            hop_length=enhancement_config["stft"]["hop_length"]
+        )
 
         # 4. Guardar el audio mejorado
         array_to_wav(
-            normalized_audio.astype(np.float32),
+            audio_enhanced.astype(np.float32),
             './audio/enhanced_audio.wav',
             sr
         )
@@ -148,32 +173,6 @@ def enhance_audio(audio, sr):
     except Exception as e:
         logger.error(f"Error en mejora de audio: {e}")
 
-def process_command(text):
-    """
-    Procesa el texto reconocido para identificar comandos con más tolerancia
-    """
-    text = text.lower().strip()
-    logger.info(f"Procesando texto: '{text}'")
-    
-    # Palabras clave para prender
-    prender_keywords = ['prend', 'encend', 'prende', 'enciend']
-    # Palabras clave para apagar
-    apagar_keywords = ['apag', 'apague']
-    
-    # Buscar coincidencias para prender
-    for keyword in prender_keywords:
-        if keyword in text:
-            logger.info(f"Comando PRENDER detectado (keyword: {keyword})")
-            return "TURN_ON"
-    
-    # Buscar coincidencias para apagar
-    for keyword in apagar_keywords:
-        if keyword in text:
-            logger.info(f"Comando APAGAR detectado (keyword: {keyword})")
-            return "TURN_OFF"
-    
-    logger.info(f"No se reconoció el comando: {text}")
-    return "UNKNOWN"
 
 def decode_audio(audio_path):
     """
@@ -186,7 +185,7 @@ def decode_audio(audio_path):
         # Configurar opciones específicas para detectar "Prender" o "Apagar"
         options = {
             "language": "es",
-            "initial_prompt": "El audio contiene una de las palabras clave: 'Prender'",
+            "initial_prompt": "El audio contiene una de las palabras clave: 'Prender' y 'Apagar' seguido de Alexa",
             "temperature": 0,  # Reducir variabilidad
             "best_of": 5,     # Aumentar intentos de decodificación
             "beam_size": 5,   # Aumentar búsqueda de beam
@@ -200,7 +199,11 @@ def decode_audio(audio_path):
         logger.info(f"Texto reconocido: '{texto_reconocido}'")
         
         # Procesar el comando
-        comando = "TURN_ON" if "prender" in texto_reconocido else "UNKNOWN"
+        comando = (
+            "TURN_ON" if "prender" in texto_reconocido else
+            "TURN_OFF" if "apagar" in texto_reconocido else
+            "UNKNOWN"
+        )
         logger.info(f"Comando identificado: {comando}")
         
         return comando

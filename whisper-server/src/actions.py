@@ -3,7 +3,6 @@ import logging
 
 # Configurar logging
 logging.basicConfig(
-    filename='./log/actions.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 keywords = ['prender', 'apagar', 'alexa', 'unknown']
 
-def __find_any_keywords(text):
+def find_any_keywords(text):
     """
     Busca palabras clave en el texto y devuelve el comando correspondiente
     """
@@ -31,9 +30,9 @@ def set_command(command):
     Convierte comandos de texto a valores hexadecimales
     """
     commands = {
-        "TURN_ON": 0x0501,
-        "TURN_OFF": 0x0500,
-        "UNKNOWN": 0x0500  # Valor por defecto para comandos desconocidos
+        "TURN_ON": "0501",
+        "TURN_OFF": "0500",
+        "UNKNOWN": "0000"
     }
     
     try:
