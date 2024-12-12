@@ -82,10 +82,17 @@ def connect_websocket(auth_tokens):
 
 
 def send_udp_message_to_wemos(message):
-  udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  udp_socket.sendto(message.encode(), (WEMOS_IP, WEMOS_PORT))
-  udp_socket.close()
-  log(f"Mensaje UDP enviado a Wemos: {message}")
+
+  print("Mensaje: " + message)
+  datos = bytes.fromhex(message[2:])  # Skip '0x' prefix
+        
+  # Crear socket UDP
+  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  
+  # Enviar datos
+  sock.sendto(datos, (WEMOS_IP, WEMOS_PORT))
+
+  log(f"Mensaje UDP enviado a Wemos: {datos}")
 
 
 # Inicia el servidor UDP y reenvía mensajes al WebSocket

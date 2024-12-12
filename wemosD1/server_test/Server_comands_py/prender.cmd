@@ -1,1 +1,1 @@
-py comando.py 192.168.1.65 12345 0501
+python3 comando.py 192.168.1.65 12345 0501
