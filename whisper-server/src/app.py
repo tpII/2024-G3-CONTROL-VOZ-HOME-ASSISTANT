@@ -44,7 +44,6 @@ def process_audio(audio_path):
         command_output = decode_audio(enhanced_path)
         logger.info(f"🎯 Texto detectado: {command_output}")
         
-<<<<<<< HEAD
         command_output = set_command(str(command_output)).get('command')
 
         
@@ -61,22 +60,6 @@ def process_audio(audio_path):
             
             # Ejecutar el comando localmente si es necesario
             
-=======
-        
-        # Solo procesamos comandos válidos
-        hex_command = set_command(str(command_output))['command']
-        try:
-            # Crear socket UDP para enviar el comando
-            sock_comando = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            
-            # Convertir el comando hexadecimal a bytes (2 bytes, big endian)
-            command_bytes = hex_command.to_bytes(2, byteorder='big')
-            
-            # Enviar el comando
-            sock_comando.sendto(command_bytes, ("192.168.1.65", 12345))
-            logger.info(f"📤 Comando hexadecimal enviado: 0x{hex_command:04X}")
-            sock_comando.close()
->>>>>>> master
             
             # Eliminar el archivo procesado
             servidor_udp.eliminar_wav_antiguo()

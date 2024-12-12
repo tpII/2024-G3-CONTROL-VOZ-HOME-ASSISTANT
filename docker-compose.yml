@@ -21,11 +21,7 @@ services:
     tty: true
     environment:
       - WEMOS_IP=192.168.1.65
-<<<<<<< HEAD
-      - WEMOS_PORT=4040
-=======
       - WEMOS_PORT=12345
->>>>>>> master
       - WHISPER_PORT=8082
       - WHISPER_URL=http://whisper:8082
       - UDP_SERVER_HOST=udp-server
@@ -64,11 +60,7 @@ services:
       - WEBSOCKET_URL=ws://webserver:8080
       - WEBSOCKET_PORT=8080
       - WEMOS_IP=192.168.1.65
-<<<<<<< HEAD
-      - WEMOS_PORT=4040
-=======
       - WEMOS_PORT=12345
->>>>>>> master
 
   whisper:
     build: ./whisper-server
@@ -81,9 +73,5 @@ services:
       - WEBSERVER_URL=http://webserver:8080
       - WEBSOCKET_URL=ws://webserver:8080
       - WEBSOCKET_PORT=8080
-<<<<<<< HEAD
-      - WEMOS_IP=192.168.1.65
-=======
       - WEMOS_IP=192.168.1.64
->>>>>>> master
       - WEMOS_PORT=4040
