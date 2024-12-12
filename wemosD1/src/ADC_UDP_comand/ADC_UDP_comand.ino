@@ -6,12 +6,12 @@ const char* ssid = "Lucky";
 const char* password = "123412341234";
 
 // Configuración de UDP
-const char udpAddress[16] = "192.168.1.66"; // Dirección IP de la computadora
-const int udpPort = 12345; // Puerto en el que el servidor escucha
+const char udpAddress[16] = "192.168.1.67"; // Dirección IP de la computadora
+const int udpPort = 4444; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
 
-#define sample_size 7000
+#define sample_size 7200
 #define compres_ratio 10 //suavizado maximo 64x
 uint16_t adc_addr[sample_size]; // point to the address of ADC continuously fast sampling output
 uint16_t bufer_compress[sample_size/compres_ratio];
