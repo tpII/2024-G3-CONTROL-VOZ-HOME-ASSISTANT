@@ -35,12 +35,12 @@ services:
     stdin_open: true
     tty: true
     environment:
-      - WEMOS_IP=192.168.1.64
+      - WEMOS_IP=192.168.1.65
       - WEMOS_PORT=4040
       - WHISPER_PORT=8082
       - WHISPER_URL=http://whisper:8082
-      - UDP_SERVER_HOST=udp-server
-      - UDP_SERVER_PORT=44444
+      - UDP_SERVER_HOST=192.168.1.65
+      - UDP_SERVER_PORT=12345
 
   udp-server:
     build: ./udp-server

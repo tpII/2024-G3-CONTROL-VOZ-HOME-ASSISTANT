@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ServidorUDP:
-    def __init__(self, host="192.168.1.66", port=12345):
+    def __init__(self, host="192.168.1.67", port=12345):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((host, port))
         self.running = True
