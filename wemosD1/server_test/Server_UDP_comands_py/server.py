@@ -12,10 +12,11 @@ class ServidorUDP:
         # Configuración global
         self.CONFIG = {
             'UDP_IP': "0.0.0.0",
-            'UDP_PORT': 12345,
+            'UDP_PORT': 4444,
+            'DATA_LENGTH': 720,  # Configurable data block length
             'SAMPLE_RATE': 10000,
-            'MAX_RECORDING_DURATION': 30,  # máximo 30 segundos por grabación
-            'SILENCE_DURATION': 1,  # 1 segundos de silencio para separar las grabaciones
+            'MAX_RECORDING_DURATION': 10,  # máximo 30 segundos por grabación
+            'SILENCE_DURATION': 2,  # 1 segundos de silencio para separar las grabaciones
             'TRIGGER_SILENCE': 32   # umbral de variación para considerar silencio
         }
         
@@ -144,7 +145,7 @@ class ServidorUDP:
             while self.running:
                 if not self.paused:
                     try:
-                        data, _ = self.sock.recvfrom(1024*2+4)
+                        data, _ = self.sock.recvfrom(self.CONFIG['DATA_LENGTH']*2+4)
                         
                         # Procesar datos recibidos
                         received_data = [int.from_bytes(data[i:i+2], 'little') 
@@ -158,7 +159,7 @@ class ServidorUDP:
                         tiempo_transcurrido = int(tiempo_actual - inicio_grabacion)
                         
                         # Verificar condiciones de detención
-                        if self.verificar_silencio(buffer_actual[-50:]):  # Verificar últimas 50 muestras
+                        if self.verificar_silencio(buffer_actual[-500:]):  # Verificar últimas 50 muestras
                             if tiempo_actual - ultima_grabacion > self.CONFIG['SILENCE_DURATION']:
                                 print("\n🔇 Silencio detectado. Guardando grabación...")
                                 self.guardar_grabacion()
