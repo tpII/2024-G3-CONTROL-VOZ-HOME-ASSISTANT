@@ -51,7 +51,9 @@ export function WebSocketProvider({
     webSocket.onmessage = (event: MessageEvent) => {
       try {
         const { message } = JSON.parse(event.data);
-        setLedState(message);
+        if (message === "ON" || message === "OFF") {
+          setLedState(message);
+        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
