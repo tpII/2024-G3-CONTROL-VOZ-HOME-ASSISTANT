@@ -5,7 +5,22 @@ networks:
     driver: bridge
 
 services:
-  # Servicio del webserver (debe iniciar primero)
+  # Servicio de la dashboard
+  frontend-dashboard:
+    build:
+      context: ./dashboard-pwa
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: "http://localhost:8080"
+        NEXT_PUBLIC_BACKEND_WEBSOCKET_URL: "ws://localhost:8080"
+    container_name: frontend-dashboard
+    ports:
+      - "3000:3000" # Puerto mapeado
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+      - NEXT_PUBLIC_BACKEND_WEBSOCKET_URL=ws://localhost:8080
+
+  # Servicio de la aplicación web (ej. una app en Ruby)
   webserver:
     build: ./rails-server
     container_name: ruby-server
@@ -26,23 +41,6 @@ services:
       - WHISPER_URL=http://whisper:8082
       - UDP_SERVER_HOST=udp-server
       - UDP_SERVER_PORT=12345
-
-  # Servicio del frontend (depende del webserver)
-  frontend-dashboard:
-    build:
-      context: ./dashboard-pwa
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_BACKEND_URL: "http://webserver:8080"
-        NEXT_PUBLIC_BACKEND_WEBSOCKET_URL: "ws://webserver:8080"
-    container_name: frontend-dashboard
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://webserver:8080
-      - NEXT_PUBLIC_BACKEND_WEBSOCKET_URL=ws://webserver:8080
-    depends_on:
-      - webserver
 
   udp-server:
     build: ./udp-server
