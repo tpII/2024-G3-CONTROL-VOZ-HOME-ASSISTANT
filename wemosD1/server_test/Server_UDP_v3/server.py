@@ -8,16 +8,25 @@ import threading
 import keyboard
 
 class ServidorUDP:
-    def __init__(self):
-        # Configuración global
+    def __init__(self, config=None):
+        # Default configuration with user-configurable options
         self.CONFIG = {
             'UDP_IP': "0.0.0.0",
             'UDP_PORT': 12345,
-            'SAMPLE_RATE': 10000,
+            'SAMPLE_RATE': 10000,  # 10 kHz
+            'DATA_LENGTH': 500,  # Configurable data block length
             'MAX_RECORDING_DURATION': 30,  # máximo 30 segundos por grabación
             'SILENCE_DURATION': 1,  # 1 segundos de silencio para separar las grabaciones
-            'TRIGGER_SILENCE': 32   # umbral de variación para considerar silencio
+            'TRIGGER_SILENCE': 32,  # umbral de variación para considerar silencio
+            'GAP_FILL_MODE': 1  # Modo de relleno de huecos (1-4)
         }
+        
+        # Override default configuration if provided
+        if config:
+            self.CONFIG.update(config)
+        
+        # Calculated parameters
+        self.BLOCK_TIME = (self.CONFIG['DATA_LENGTH'] * 0.1) / 1000  # tiempo de bloque en segundos
         
         # Variables de estado
         self.running = False
@@ -36,6 +45,10 @@ class ServidorUDP:
         self.sock.bind((self.CONFIG['UDP_IP'], self.CONFIG['UDP_PORT']))
         self.sock.settimeout(1.0)  # timeout para permitir verificaciones periódicas
         
+        # Tracking for gap handling
+        self.last_received_block_time = None
+        self.last_block_data = None
+
     def print_header(self):
         """Muestra la información inicial del servidor"""
         print("\n" + "=" * 50)
@@ -45,15 +58,78 @@ class ServidorUDP:
         for ip in self.local_ips:
             print(f"📍 {ip}:{self.CONFIG['UDP_PORT']}")
         print(f"📡 Puerto de escucha: {self.CONFIG['UDP_PORT']}")
-        print(f"\n⚙️  Configuración de Silencio:")
+        print("\n⚙️  Configuración de Audio:")
+        print(f"   - Tasa de Muestreo: {self.CONFIG['SAMPLE_RATE']} Hz")
+        print(f"   - Longitud de Bloque: {self.CONFIG['DATA_LENGTH']} muestras")
+        print(f"   - Tiempo por Bloque: {self.BLOCK_TIME*1000:.2f} ms")
+        print(f"   - Modo de Relleno de Huecos: {self.CONFIG['GAP_FILL_MODE']}")
+        print("\n⚙️  Configuración de Silencio:")
         print(f"   - Umbral de Silencio: ±{self.CONFIG['TRIGGER_SILENCE']}")
         print(f"   - Duración de Silencio para Detener: {self.CONFIG['SILENCE_DURATION']} segundos")
         print(f"   - Duración Máxima de Grabación: {self.CONFIG['MAX_RECORDING_DURATION']} segundos")
+        print("\nModos de Relleno de Huecos:")
+        print("1: Relleno con valor promedio")
+        print("2: Relleno con recta interpolada")
+        print("3: Relleno repitiendo último bloque")
+        print("4: Eliminar espacios vacíos")
         print("\nComandos disponibles:")
         print("'p' - Pausar/Reanudar grabación")
         print("'q' - Finalizar grabación actual y salir")
         print("'s' - Salir sin guardar")
         print("\n" + "=" * 50 + "\n")
+
+    def fill_gaps(self, current_block_time, current_block_data):
+        """
+        Rellena los huecos entre bloques según el modo seleccionado
+        
+        Args:
+            current_block_time (float): Tiempo del bloque actual
+            current_block_data (list): Datos del bloque actual
+        
+        Returns:
+            list: Datos con huecos rellenados
+        """
+        # Si es el primer bloque, no hay huecos que rellenar
+        if self.last_received_block_time is None:
+            self.last_received_block_time = current_block_time
+            self.last_block_data = current_block_data
+            return current_block_data
+        
+        # Calcular tiempo transcurrido desde el último bloque
+        time_gap = current_block_time - self.last_received_block_time
+        samples_to_fill = int(time_gap * self.CONFIG['SAMPLE_RATE'])
+        
+        # Modo de relleno
+        if self.CONFIG['GAP_FILL_MODE'] == 1:
+            # Relleno con valor promedio
+            avg_value = np.mean(self.last_block_data + current_block_data)
+            fill_data = [int(avg_value)] * samples_to_fill
+        
+        elif self.CONFIG['GAP_FILL_MODE'] == 2:
+            # Relleno con recta interpolada
+            start_val = self.last_block_data[-1]
+            end_val = current_block_data[0]
+            fill_data = [int(np.interp(i, [0, samples_to_fill-1], [start_val, end_val])) 
+                         for i in range(samples_to_fill)]
+        
+        elif self.CONFIG['GAP_FILL_MODE'] == 3:
+            # Relleno repitiendo último bloque
+            fill_data = self.last_block_data * (samples_to_fill // len(self.last_block_data) + 1)
+            fill_data = fill_data[:samples_to_fill]
+        
+        elif self.CONFIG['GAP_FILL_MODE'] == 4:
+            # Eliminar espacios vacíos (no hacer nada)
+            fill_data = []
+        
+        else:
+            raise ValueError("Modo de relleno de huecos inválido")
+        
+        # Actualizar último bloque
+        self.last_received_block_time = current_block_time
+        self.last_block_data = current_block_data
+        
+        # Combinar datos
+        return fill_data + current_block_data
 
     def verificar_silencio(self, datos):
         """
@@ -150,8 +226,12 @@ class ServidorUDP:
                         received_data = [int.from_bytes(data[i:i+2], 'little') 
                                        for i in range(0, len(data) - 2, 2)]
                         
-                        buffer_actual.extend(received_data)
-                        self.collected_data.extend(received_data)
+                        # Manejar huecos entre bloques
+                        current_block_time = time.time()
+                        filled_data = self.fill_gaps(current_block_time, received_data)
+                        
+                        buffer_actual.extend(filled_data)
+                        self.collected_data.extend(filled_data)
                         
                         # Calcular tiempo transcurrido
                         tiempo_actual = time.time()
@@ -205,5 +285,12 @@ class ServidorUDP:
             print("👋 Servidor cerrado.")
 
 if __name__ == "__main__":
-    servidor = ServidorUDP()
+    # Ejemplo de uso con configuración personalizada
+    custom_config = {
+        'UDP_PORT': 12345,
+        'DATA_LENGTH': 700,  # Ahora configurable
+        'GAP_FILL_MODE': 2  # Modo de relleno por defecto
+    }
+    
+    servidor = ServidorUDP(custom_config)
     servidor.iniciar()

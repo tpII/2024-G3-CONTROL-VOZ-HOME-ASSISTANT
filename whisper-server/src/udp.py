@@ -15,7 +15,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ServidorUDP:
+<<<<<<< HEAD
     def __init__(self, host, port, **kwargs):
+=======
+    def __init__(self, host="192.168.1.67", port=12345):
+>>>>>>> master
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((host, port))
         self.running = True
@@ -27,12 +31,12 @@ class ServidorUDP:
         logging.info(f"🎧 Servidor UDP iniciado en {host}:{port}")
         print(f"🎧 Servidor UDP escuchando en {host}:{port}")
 
-        # Actualizar configuración
+        # Actualizar configuración para 30 segundos máximo
         self.CONFIG = {
             'TRIGGER_SILENCE': 32,     # umbral de variación para considerar silencio
-            'SILENCE_DURATION': 1,     # segundos de silencio para detener
-            'SAMPLE_RATE': 15000,
-            'MAX_DURATION': 5         # duración máxima en segundos
+            'SILENCE_DURATION': 1,    # reducido a 0.5 segundos de silencio para detener
+            'SAMPLE_RATE': 16000,      # mantener sample rate
+            'MAX_DURATION': 10          # duración máxima en segundos
         }
         self.ultima_grabacion = time.time()
         self.inicio_grabacion = None
@@ -58,7 +62,7 @@ class ServidorUDP:
         finally:
             sock.close()
 
-    def receive_udp(self, ip='192.168.1.65', port=12345, buffer_size=1024):
+    def receive_udp(self, ip='192.168.1.66', port=12345, buffer_size=1024):
         """
         Recibe paquetes UDP en la IP y puerto especificados de forma bloqueante
         """
@@ -89,7 +93,7 @@ class ServidorUDP:
     logging.info("Servidor UDP detenido")
     print("Servidor UDP detenido")
 
-    def guardar_wav(self, datos, sample_rate=15000):
+    def guardar_wav(self, datos, sample_rate=12000):
         """
         Guarda los datos de audio como archivo WAV si duran más de 2 segundos
         """

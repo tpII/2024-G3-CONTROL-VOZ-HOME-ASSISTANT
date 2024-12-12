@@ -6,13 +6,13 @@ const char* ssid = "Lucky";
 const char* password = "123412341234";
 
 // Configuración de UDP
-const char udpAddress[16] = "192.168.1.10"; // Dirección IP de la computadora
+const char udpAddress[16] = "192.168.1.66"; // Dirección IP de la computadora
 const int udpPort = 12345; // Puerto en el que el servidor escucha
 
 WiFiUDP udp;
 
-#define sample_size 4096
-#define compres_ratio 8 //suavizado maximo 64x
+#define sample_size 7000
+#define compres_ratio 10 //suavizado maximo 64x
 uint16_t adc_addr[sample_size]; // point to the address of ADC continuously fast sampling output
 uint16_t bufer_compress[sample_size/compres_ratio];
 uint8_t adc_clk_div = 16; // ADC working clock = 80M/adc_clk_div, range [8, 32], the recommended value is 8
@@ -44,7 +44,13 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nConectado a WiFi.");
+  Serial.print("\nConectado a WiFi: ");
+  Serial.println(ssid);
+  Serial.print("Enviando Paquetes a ");
+  Serial.print(udpAddress);
+  Serial.print(" : ");
+  Serial.println(udpPort);
+
   udp.begin(udpPort);  // Inicializa UDP
   // udp.read(udpAddress, 13); // opcion adicional de reconfigurar la IP demanera dinamica
 }

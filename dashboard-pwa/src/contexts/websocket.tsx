@@ -7,7 +7,7 @@ import { config } from "@/config";
 interface WebSocketContextProps {
   connected: boolean;
   ledState: "ON" | "OFF";
-  sendMessage: (message: "TURN_ON" | "TURN_OFF") => void;
+  sendMessage: (message: "ON" | "OFF") => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextProps | null>(null);
@@ -37,13 +37,23 @@ export function WebSocketProvider({
 
     webSocket.onopen = () => {
       setConnected(true);
-      webSocket.send("SUBSCRIBE_LED_STATE");
+      webSocket.send(
+        JSON.stringify({
+          command: "subscribe",
+          identifier: JSON.stringify({
+            channel: "ChatChannel",
+            room: "udp",
+          }),
+        })
+      );
     };
 
     webSocket.onmessage = (event: MessageEvent) => {
       try {
-        const message = event.data;
-        setLedState(message);
+        const { message } = JSON.parse(event.data);
+        if (message === "ON" || message === "OFF") {
+          setLedState(message);
+        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -70,9 +80,21 @@ export function WebSocketProvider({
     };
   }, []);
 
-  const sendMessage = (message: "TURN_ON" | "TURN_OFF") => {
+  const sendMessage = (message: "ON" | "OFF") => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(message);
+      socketRef.current.send(
+        JSON.stringify({
+          command: "message",
+          identifier: JSON.stringify({
+            channel: "ChatChannel",
+            room: "udp",
+          }),
+          data: JSON.stringify({
+            action: "receive",
+            message,
+          }),
+        })
+      );
     }
   };
 
