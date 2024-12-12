@@ -39,7 +39,7 @@ services:
       - WEMOS_PORT=4040
       - WHISPER_PORT=8082
       - WHISPER_URL=http://whisper:8082
-      - UDP_SERVER_HOST=192.168.1.65
+      - UDP_SERVER_HOST=udp-server
       - UDP_SERVER_PORT=12345
 
   udp-server:
@@ -48,7 +48,7 @@ services:
     volumes:
       - ./udp-server:/app
     ports:
-      - "44444:44444/udp"
+      - "12345:12345/udp"
     networks:
       - app-network
     stdin_open: true
